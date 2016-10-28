@@ -9,6 +9,7 @@ module ActiveFeed
       configuration = ActiveFeed::Configuration.send(:configure, &block)
       property.nil? ? configuration : configuration.send(property)
     end
+    alias_method :configure, :config
   end
 end
 
