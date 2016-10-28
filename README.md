@@ -7,9 +7,9 @@ This gem attempts to fill two purposes:
  
 As a result, this is a very fast Redis-backed user activity feed of various events relevant to the given user. As events arrive, they are converted to a compacted string-based schema, and stored in several sets within Redis, using several data structures, such as Ordered Set and List. 
 
-This is a _write-time_ activity-feed implementation, where the speed optimization is focused on _read-time_performance, and the majority of the work is done when the event actually happens. When the user requests their feed, it is quickly populated with the rendered versions of the events stored in the user's feed. 
+This is a _write-time_ activity-feed implementation, where the speed optimization is focused on the _read-time_ performance, and the majority of the work is performed when the event is actually published. When the user requests their feed, it is constructed by returning the rendered versions of the events stored in the user's feed. 
 
-Events can be any ruby classes that application provides, as long as they respond to several required methods (see below).
+Events can be any ruby classes that application provides, as long as they respond to several required methods (see below). They should also be able to render themselves in order to show up within the application, but this functionality is outside of the scope of this gem.
 
 ### Features
 
