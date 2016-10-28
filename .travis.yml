@@ -1,6 +1,8 @@
 cache: bundler
 rvm:
 - 2.3.1
+env:
+  - CODECLIMATE_REPO_TOKEN=4420fcc110f74e4f517b30001c3655f83f727db789e1798f2433c3fa7e38fc7a
 services:
 - redis-server
 script: bundle exec rspec
