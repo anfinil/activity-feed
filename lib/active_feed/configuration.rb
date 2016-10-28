@@ -25,6 +25,11 @@ module ActiveFeed
       end
     end
 
-    attr_accessor :backend
+    attr_accessor :backend, :per_page
+
+    def initialize
+      self.per_page = 50
+    end
+
   end
 end

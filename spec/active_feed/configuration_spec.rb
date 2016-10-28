@@ -4,19 +4,25 @@ describe ActiveFeed::Configuration do
   subject { ActiveFeed::Configuration }
   it('should respond to #config') { is_expected.to respond_to(:config) }
 
-  context '#backend accessor' do
-    subject { ActiveFeed::Configuration.configure }
-    it('is defined') { is_expected.to respond_to(:backend) }
+  %i(backend per_page).each do |property|
 
-    context 'is assigned' do
-      before do
-        ActiveFeed::Configuration.configure do |c|
-          c.backend = :fake_backend
+    context "#{property} accessor" do
+      subject { ActiveFeed::Configuration.configure }
+
+      let(:property_value) { rand(20) }
+
+      it('is defined') { is_expected.to respond_to(property) }
+
+      context 'is assigned' do
+        before do
+          ActiveFeed::Configuration.configure do |c|
+            c.send("#{property}=", property_value)
+          end
         end
-      end
 
-      subject { ActiveFeed::Configuration.config.backend }
-      it('and then returned') { is_expected.to eq(:fake_backend) }
+        subject { ActiveFeed::Configuration.config.send(property) }
+        it('and then returned') { is_expected.to eq(property_value) }
+      end
     end
   end
 
@@ -30,6 +36,7 @@ describe ActiveFeed::Configuration do
       expect(ActiveFeed.config.backend).to eq(:stuff)
       expect(ActiveFeed.config(:backend)).to eq(:stuff)
       expect(ActiveFeed.config).to eq(ActiveFeed::Configuration.config)
+      expect(ActiveFeed.configure).to eq(ActiveFeed::Configuration.config)
     end
   end
 end
