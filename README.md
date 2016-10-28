@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/kigster/active_feed.svg?token=NB4h8vmPKru2tx5DjD9n&branch=master)](https://travis-ci.com/kigster/active_feed)
+[![Build Status](https://travis-ci.org/kigster/active_feed.svg?branch=master)](https://travis-ci.org/kigster/active_feed)
 
 # ActiveFeed
 
