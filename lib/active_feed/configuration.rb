@@ -25,10 +25,19 @@ module ActiveFeed
       end
     end
 
-    attr_accessor :backend, :per_page
+    # Set to a backend able to fulfill the API contract with the
+    # ActiveFeed gem.
+    attr_accessor :backend
+
+    # Items per page to return
+    attr_accessor :per_page
+
+    # Maximum number of items stored in the feed
+    attr_accessor :feed_length
 
     def initialize
       self.per_page = 50
+      self.feed_length = 1000
     end
 
   end
