@@ -1,17 +1,11 @@
 cache: bundler
-sudo: false
 rvm:
 - 2.3.1
 services:
 - redis-server
-before_script:
 script: bundle exec rspec
 notifications:
   slack:
     rooms:
       - simbi:zBpZCJvFIMkokjjLshuMT1c1#github
       - simbi:zBpZCJvFIMkokjjLshuMT1c1#build-status
-  email:
-    recipients:
-    on_success: change
-    on_failure: always
