@@ -1,13 +1,14 @@
 cache: bundler
 rvm:
-- 2.3.1
-env:
-  - CODECLIMATE_REPO_TOKEN=4420fcc110f74e4f517b30001c3655f83f727db789e1798f2433c3fa7e38fc7a
+  - 2.3.1
 services:
-- redis-server
+  - redis-server
 script: bundle exec rspec
 notifications:
   slack:
     rooms:
-      - simbi:zBpZCJvFIMkokjjLshuMT1c1#github
       - simbi:zBpZCJvFIMkokjjLshuMT1c1#build-status
+    on_success: always
+    on_failure: always
+env:
+  - CODECLIMATE_REPO_TOKEN=4420fcc110f74e4f517b30001c3655f83f727db789e1798f2433c3fa7e38fc7a
