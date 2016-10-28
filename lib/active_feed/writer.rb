@@ -15,7 +15,6 @@ module ActiveFeed
     end
 
     def delete(event:)
-      raise AbstractMethodCalledError, 'backend not defined'
     end
   end
 end
