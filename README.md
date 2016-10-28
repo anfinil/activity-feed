@@ -1,23 +1,32 @@
 # ActiveFeed
 
-This gem implements a very fast Redis-backed user activity feed of various events relevant to the given user. As events arrive, they are converted to a compacted string-based schema, and stored in several sets within Redis, using several data structures, such as Ordered Set and List. 
+This gem attempts to fill two purposes:
 
-This is a "write-time" activity-feed implementation, where the speed optimization is focused on read-time performance, and the majority of the work is done during the "write-time", ie. when the event actually happens. 
+ * define a minimalistic API for a typical event-based News Feed (a.k.a. Activity Feed)
+ * provide a scalable default backend implementation using Redis. 
+ 
+As a result, this is a very fast Redis-backed user activity feed of various events relevant to the given user. As events arrive, they are converted to a compacted string-based schema, and stored in several sets within Redis, using several data structures, such as Ordered Set and List. 
 
-When the user requests their feed, it is very easy to populate with a pre-constructed items generated based on the data in Redis, stored for this user.
+This is a _write-time_ activity-feed implementation, where the speed optimization is focused on _read-time_performance, and the majority of the work is done when the event actually happens. When the user requests their feed, it is quickly populated with the rendered versions of the events stored in the user's feed. 
 
-Key features of this gem are (for a Redis backend):
+Events can be any ruby classes that application provides, as long as they respond to several required methods (see below).
 
- * Very fast, constant time read operation for any user
- * Compatibility with `twemproxy` and data sharding by user ID to support massive data sets
- * Total, read and unread items count for any user
- * Remove items from other user's existing feeds (ie, when someone unfollows) 
+### Features
 
-It is my hope to keep this gem small and very targeted to solving a specific problem: reading and writing from an abstracted backend that can later be replaced with another underlying solution if needed.
+Key features of this gem are:
+
+ * Fast, constant time read operations of the news feed for any user
+ * Compatibility with `twemproxy`, and it's ability to shard Redis data by user ID to support massive data sets across any number of servers
+ * Ability to read the total, read and unread items count for any user
+ * Ability to delete news feed items from a user's feed (ie, when the user unfollows somebody, etc).
+
+It is my hope to keep this gem small and very targeted to solving a specific problem: _defining a basic newsfeed API_ and _reading and writing from an abstracted backend that can later be replaced with another underlying solution if needed_.
  
 ## Usage
 
-First you need to configure the Feed with a valid backend implementation, and configure it.
+First you need to configure the Feed with a valid backend implementation.
+
+### Configuration
 
 ```ruby
   require 'active_feed'
@@ -31,8 +40,7 @@ First you need to configure the Feed with a valid backend implementation, and co
   end
 ```
 
-Above awe've configured both the Redis client, and passed it to the `ActiveFeed::Backend::Redis` – which is
-an implementation of the backend data store.
+Above awe've configured both the Redis client, and passed it to the `ActiveFeed::Backend::Redis` – which is an implementation of the backend data store.
 
 ### Writing Data to the Feed
  
@@ -41,7 +49,7 @@ an implementation of the backend data store.
   # update with this event, this is how we add it to the feed:
   require 'active_feed/writer'
   
-  user_id_list = [1,4,545, 234234]
+  user_id_list = [1, 4, 545, 234234]
   
   writer = ActiveFeed::Writer.new(user_id_list)
   writer.add(sort: Time.now, event: @event)
@@ -99,7 +107,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/active_feed.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/active_feed.
 
 
 ## License
