@@ -37,14 +37,23 @@ an implementation of the backend data store.
 ### Writing Data to the Feed
  
 ```ruby
-  # Given @event (containing :actor, :object, :target, etc) and the list of users to 
+  # Given an @event (containing :actor, :object, :target, etc) and the list of users to 
   # update with this event, this is how we add it to the feed:
   require 'active_feed/writer'
+  
   user_id_list = [1,4,545, 234234]
-  ActiveFeed::Writer.new(user_id_list).add(sort: Time.now, value: @event.feed_value)
+  
+  writer = ActiveFeed::Writer.new(user_id_list)
+  writer.add(sort: Time.now, event: @event)
 ```
 
-Note the events must implement `#feed_value` method, which would return a short representation of the event, sufficient to render the event in JSON or HTML later. For example, this would probably be a short delimited string, with a type and a few IDs identifying the value.
+#### Event Serialization
+
+Events can be a pure ruby classes, but they must implement:
+
+ * `#to_feed` instance method, which would return a short representation of the event using a string and IDs related to it. For example, it can be a short delimited string, with a type and a few IDs identifying the event.
+ 
+ * `#from_feed` class method, which receives a string representation above and reconstructs the event to it's fullest.
  
 ### Reading Data from the Feed
 
@@ -58,8 +67,8 @@ Given a user,
     # item here is a string, of the form, eg: 'l:23145:434243:343425', where l = like
     # and the three numbers are ids of actor, object and the object's target.
     
-    NewsFeedItem.restore(item)    # returns +UserLikedAStoryItem+ instance
-      .render(:json)              # returns JSON string representation of the news feed item
+    ApplicationEvent.from_feed(item) # returns +UserLikedAStoryItem+ instance
+      .render(:json)               # returns JSON string representation of the news feed item
          
   end.join(', ')
 

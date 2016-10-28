@@ -6,13 +6,16 @@ module ActiveFeed
       self.users = users
     end
 
-    def insert(sort:, value:)
+    def insert(event:, sort: 1)
+      raise AbstractMethodCalledError, 'backend not defined'
     end
 
     def clear
+      raise AbstractMethodCalledError, 'backend not defined'
     end
 
-    def delete(value:)
+    def delete(event:)
+      raise AbstractMethodCalledError, 'backend not defined'
     end
   end
 end
