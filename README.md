@@ -12,6 +12,7 @@ This gem attempts to fill two purposes:
  * define a minimalistic API for a typical event-based News Feed (a.k.a. Activity Feed)
  * provide a scalable default backend implementation using Redis. 
 
+
 ### Design 
 
 This feed works best in a combination with application events, using any event-dispatching framework such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  As events are dispatched, an application component that generates activity feed must subscribes to a subset of the events that must appear in the feed. The events are converted to a compacted string-based schema, and stored in Redis using several internal data structures. 
