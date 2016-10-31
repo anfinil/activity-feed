@@ -14,3 +14,4 @@ module ActiveFeed
 end
 
 require 'active_feed/configuration'
+require 'active_feed/updater'

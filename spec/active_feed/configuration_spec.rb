@@ -1,10 +1,9 @@
 require 'spec_helper'
 
 module ActiveFeed
-
   # Returns list of symbols representing each accessor available
-  CONFIG_ACCESSORS = (ActiveFeed::Configuration.configure.methods - Object.methods) \
-    .grep(/=/) # grab only methods like per_page=
+  CONFIG_ACCESSORS = (ActiveFeed::Configuration.configure.methods - Object.methods)
+                       .grep(/=/) # grab only methods like per_page=
                        .map { |m| m[0..-2] } # strip the = sign
                        .map(&:to_sym) # and symbolize
 
@@ -12,7 +11,6 @@ module ActiveFeed
     context '#config' do
       subject { Configuration }
       it('should respond to #config') { is_expected.to respond_to(:config) }
-
     end
 
     context 'configurable accessors' do
