@@ -13,11 +13,11 @@
 
 ## Fast, Redis-based, Write-Time Activity Feed for Social Networks
 
-This is "from-the-ground-up" created library attempts to fill two purposes:
+This is a "from-the-ground-up" write-up of the activity feed concept, that hopes to fulfill the following purpose:
 
- * define a minimalistic API for a typical event-based News Feed (a.k.a. Activity Feed)
- * provide a scalable default backend implementation using Redis
- * allow connecting the application to multiple independent activity feeds that may or may not share Redis backend.
+ * To define a minimalistic API for a typical event-based News Feed (a.k.a. Activity Feed)
+ * To provide a scalable default backend implementation using Redis
+ * To allow connecting the application to multiple independent activity feeds that may or may not share Redis backend.
 
 ### Key Features
 
@@ -61,30 +61,77 @@ First you need to configure the Feed with a valid backend implementation.
 
 ```ruby
   require 'active_feed'
-  require 'active_feed-redis'
+  require 'redis'
 
   ActiveFeed.configure do |config|
      config[:news_feed].backend = ActiveFeed::Backend::Redis.new(
-      redis: ::Redis.new(host: '127.0.0.1')
+       redis: ::Redis.new(host: '127.0.0.1')
      )
-     config.per_page = 20
+     config[:news_feed].per_page = 20
   end
 ```
 
-Above awe've configured both the Redis client, and passed it to the `ActiveFeed::Backend::Redis` – which is an implementation of the backend data store.
+Above we've configured the Redis client, sent it over to the Redis Backend, which then initialized, and
+became the default implementation for this particular news feed.
+
+#### Multiple Independent Activity Feeds
+
+
+But sometimes a single feed is not enough. What if we wanted to maintain two separate personalized feeds for each user: one would be news articles the user subscribes to, and the other would be a more typical activity feed.
+
+We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing, we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
+
+```ruby
+require 'active_feed'
+require 'redis'
+
+ActiveFeed.configure do |config|
+
+  # This is the feed of news articles based on user subscription preferences.
+
+  config[:news_feed].backend = ActiveFeed::Backend::Redis.new(
+    redis: ::Redis.new(host: '127.0.0.1')
+  )
+  config[:news_feed].per_page = 20
+  config[:news_feed].delimeter = '|'
+
+
+  # This is the feed of events associated with the followers.
+  # We use ConnectionPool because we anticipate higher load.
+
+  config[:followers].backend = ActiveFeed::Backend::Redis.new(
+    redis: ConnectionPool.new(size: 5, timeout: 5) { ::Redis.new(host: '192.168.10.10', port: 9000) }
+  )
+  config[:followers].per_page = 50
+  config[:followers].delimeter = ','
+
+end
+```
+
+#### Referencing Multiple Feeds
+
+So how do you access the feed from your code?
+
+Each configuration created above automatically generates a constant under the `ActiveFeed` namespace. When we called `config[:news_feed]`, the library created a constant that from now on point to this instance of the feed within the application: `ActivityFeed::NewsFeed`.
+
+Second feed configuration would have generated `ActivityFeed::Followers`.
+
 
 ### Writing Data to the Feed
 
+When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations typically accept an array of users (or IDs)
+
 ```ruby
-  require 'active_feed/updater'
+require 'active_feed'
 
-  # First we define list of users (or "owners") of the activity feed to be
-  # populated with the given event.
-  user_id_list = [1, 4, 545, 234234]
+# First we define list of users (or "owners") of the activity feed to be
+# populated with the given event.
+user_id_list = [1, 4, 545, 234234]
 
-  # Next, we instantiate the updater by passing the list of users,
-  # and then we publish the event across all of the corresponding feeds.
-  ActiveFeed::Updater.new(user_id_list).publish(sort: Time.now, event: event)
+# Next, we instantiate the updater by passing the list of users,
+# and then we publish the event across all of the corresponding feeds.
+@feed = ActiveFeed::NewsFeed.new(user_id_list)
+@feed.publish(sort: Time.now, event: event)
 ```
 
 Instead of passing the list of user IDs, you can pass an AREL statement,
@@ -96,17 +143,32 @@ For any object types besides Integer, ActiveFeed will call a method
 that object.
 
 ```ruby
-  # This is just an example of how you could return AREL statement
-  # which can then be fetched in groups (pages) of users and split into
-  # several parallel jobs by ActiveFeed.
+# This is just an example of how you could return AREL statement
+# which can then be fetched in groups (pages) of users and split into
+# several parallel jobs by ActiveFeed.
 
-  updater = ActiveFeed::Updater.new(  User.where(follower: event.actor) )
-  updater.publish(sort: Time.now, event: event)
+@feed = ActiveFeed::NewsFeed.new(User.where(follower: event.actor))
+```
+
+#### Writing Efficiently
+
+For large data sets it is generally required to use batch operations, instead of looping for each user. If you are using Rails, then the corresponding method of interest is `#find_in_batches`, which can apply to any `ActiveRecord::Relation` instance. This method retrieves a batch of records and then yields the entire batch to the block as an array of models.
+
+If you are not using Rails, you can still use any custom method that yields the entire batch to the block as an array of IDs or models.
+
+```ruby
+@feed = ActiveFeed::NewsFeed.new do
+  User.where(followee: @event.actor).find_in_batches(batch_size: 1000) do |users|
+    yield users
+  end
+end
+# Will grab users in batches, and push news feed events to their feeds.
+@feed.publish(sort: @event.timestamp, event: @event)
 ```
 
 #### Event Serialization
 
-Events can be a pure ruby classes, but they must implement:
+Events can be pure ruby classes, but they must implement an instance method `#to_af`:
 
  * `#to_af` instance method, which would return a short representation of the event using a string and IDs related to it. For example, it can be a short delimited string, with a type and a few IDs identifying the event.
 
@@ -119,7 +181,7 @@ Given a user,
 ```ruby
   require 'active_feed/reader'
 
-  reader = ActiveFeed::Reader.new(User.where(username: 'kig').first)
+  reader = ActiveFeed::NewsFeed.new(User.where(username: 'kig').first)
 
   reader.paginate(page: 1, per_page: 20).map do |activity|
     event = ApplicationEvent.from_af(activity)  # returns a +UserLikedAStoryItem+ instance
