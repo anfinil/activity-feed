@@ -65,17 +65,43 @@ First you need to configure the Feed with a valid backend implementation.
 
   ActiveFeed.configure do |config|
      config[:news_feed].backend = ActiveFeed::Backend::Redis.new(
-       redis: ::Redis.new(host: '127.0.0.1')
+       redis: -> { ::Redis.new(host: '127.0.0.1') }
      )
-     config[:news_feed].per_page = 20
+     config[:news_feed].default_page_size = 20
+     config[:news_feed].max_size = 1000           # how many items can be in the feed
   end
 ```
 
-Above we've configured the Redis client, sent it over to the Redis Backend, which then initialized, and
-became the default implementation for this particular news feed.
+Above we've configured the Redis client, passed the proc that creates it into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a maximum of 1000 (typically most recent) events.
+
+#### Event Serialization / De-Serialization
+
+In order for the activity feed data store to remain of a manageable size (in terms of operating RAM), you have two levers to tweak:
+
+ 1. How many items can be stored in each individual user's feed, and
+ 2. How big is each individual activity feed event as it's stored in the feed.
+ 
+
+#### Recommended Scheme of Serialization 
+
+While #1 is typically defined by the Product, #2 is not user-facing, and is something we can try to compact as much as possible. You could use a JSON representation of a small value object, or even a result of `Marshall.dump`. What worked for the authors in the past is using a delimited structure, such as this below:
+
+```ruby
+ {{ actor.id }}-{{ verb }}-{{ target_object.id }}-{{ target_object_owner.id }}
+```
+
+In this scheme:
+
+ * _actor_ is the person who generated the event
+ * _verb_ is the action, eg. "favorited", "liked", "posted", "commented", "followed", etc.
+ * _target object_ would be the target of the action, such as a comment that was liked or favorited, etc.
+ * _target object owner_ is the author of the comment. 
+
+A real world example would be a string "12414325-liked-125646456-2341425453", which, as you may notice, suffers from one problem: it is not possible, or at least not easily possible, to tell what each number actually is, and what model it corresponds to. 
+
+To solve this, let's imagine that we implement the following method on all models in our Rails application. Below we implement method `#to_af` on `User`, which allows us to convert a user instance into a short-string representation `us:99879879`:
 
 #### Multiple Independent Activity Feeds
-
 
 But sometimes a single feed is not enough. What if we wanted to maintain two separate personalized feeds for each user: one would be news articles the user subscribes to, and the other would be a more typical activity feed.
 
@@ -93,8 +119,7 @@ ActiveFeed.configure do |config|
     redis: ::Redis.new(host: '127.0.0.1')
   )
   config[:news_feed].per_page = 20
-  config[:news_feed].delimeter = '|'
-
+  config[:news_feed].event_serializer = :to_af
 
   # This is the feed of events associated with the followers.
   # We use ConnectionPool because we anticipate higher load.
@@ -102,9 +127,7 @@ ActiveFeed.configure do |config|
   config[:followers].backend = ActiveFeed::Backend::Redis.new(
     redis: ConnectionPool.new(size: 5, timeout: 5) { ::Redis.new(host: '192.168.10.10', port: 9000) }
   )
-  config[:followers].per_page = 50
-  config[:followers].delimeter = ','
-
+  config[:followers].per_page = 50 
 end
 ```
 
@@ -115,7 +138,6 @@ So how do you access the feed from your code?
 Each configuration created above automatically generates a constant under the `ActiveFeed` namespace. When we called `config[:news_feed]`, the library created a constant that from now on point to this instance of the feed within the application: `ActivityFeed::NewsFeed`.
 
 Second feed configuration would have generated `ActivityFeed::Followers`.
-
 
 ### Writing Data to the Feed
 
@@ -130,12 +152,12 @@ user_id_list = [1, 4, 545, 234234]
 
 # Next, we instantiate the updater by passing the list of users,
 # and then we publish the event across all of the corresponding feeds.
-@feed = ActiveFeed::NewsFeed.new(user_id_list)
-@feed.publish(sort: Time.now, event: event)
+@feed_updater = ActiveFeed::NewsFeed.updater(user_id_list)
+@feed_updater.publish(sort: Time.now, event: event)
 ```
 
-Instead of passing the list of user IDs, you can pass an AREL statement,
-or a block which should return the next element in the array when called,
+Instead of passing the list of user IDs, you can pass an `ActiveRecord::Relation`, 
+or a block — which should yield the next element in the array when called,
 or nil when exhausted.
 
 For any object types besides Integer, ActiveFeed will call a method
@@ -147,48 +169,100 @@ that object.
 # which can then be fetched in groups (pages) of users and split into
 # several parallel jobs by ActiveFeed.
 
-@feed = ActiveFeed::NewsFeed.new(User.where(follower: event.actor))
+@feed_updater = ActiveFeed::NewsFeed.create_updater(User.where(follower: event.actor))
 ```
 
-#### Writing Efficiently
+#### Writing Efficiently, and/or Concurrently
 
 For large data sets it is generally required to use batch operations, instead of looping for each user. If you are using Rails, then the corresponding method of interest is `#find_in_batches`, which can apply to any `ActiveRecord::Relation` instance. This method retrieves a batch of records and then yields the entire batch to the block as an array of models.
 
 If you are not using Rails, you can still use any custom method that yields the entire batch to the block as an array of IDs or models.
 
 ```ruby
-@feed = ActiveFeed::NewsFeed.new do
+@feed_updater = ActiveFeed::NewsFeed.create_updater do
   User.where(followee: @event.actor).find_in_batches(batch_size: 1000) do |users|
     yield users
   end
 end
 # Will grab users in batches, and push news feed events to their feeds.
-@feed.publish(sort: @event.timestamp, event: @event)
+@feed_updater.publish(sort: @event.timestamp, event: @event)
 ```
 
-#### Event Serialization
+### Reading Data from the Feed
+
+```ruby
+  require 'active_feed/reader'
+
+  # You can also use just #reader method, instead of #create_reader
+  @feed_reader = ActiveFeed::NewsFeed.create_reader(User.where(username: 'kig').first)  
+  @feed_reader.paginate(....) 
+  # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
+```
+
+Above, you were expected to implement the ApplicationEvents::Base.deserialize method elsewhere in your application.
+
+#### Paginating Feed Activity 
+
+To actually render/display the feed to the user, would typically render each element (or event) returned by the `#paginate` call:
+
+```ruby
+  json = @feed_reader.paginate(page: 1, per_page: 20).map do |event|
+    event.render(:json)                                    
+    # => { "name": "FavoriteComment", "user": { "username": "kig" }, .... }"
+  end.join(',')
+```
+
+### Event Serialization
 
 Events can be pure ruby classes, but they must implement an instance method `#to_af`:
 
  * `#to_af` instance method, which would return a short representation of the event using a string and IDs related to it. For example, it can be a short delimited string, with a type and a few IDs identifying the event.
 
- * `#from_af` class method, which receives a string representation generated above, and reconstructs object associated with the event, needed for rendering it.
+Additionally, you must write code that performs the reverse action, and given the serialized version (the result of `to_af`) it de-serializes the data back into the event. This code would then be passed into the initializer for the `Reader` (see below).
 
-### Reading Data from the Feed
-
-Given a user,
 
 ```ruby
-  require 'active_feed/reader'
-
-  reader = ActiveFeed::NewsFeed.new(User.where(username: 'kig').first)
-
-  reader.paginate(page: 1, per_page: 20).map do |activity|
-    event = ApplicationEvent.from_af(activity)  # returns a +UserLikedAStoryItem+ instance
-    event.render(:json)                         # returns JSON string representation of the news feed item
-  end.join(',')
-
+class User
+  #....
+  def to_af
+    "us:#{self.id}"
+  end
+end
 ```
+
+And more generally, we can implement this once globally by reopening the `ActiveRecord::Base` class:
+
+```ruby
+class ActiveRecord::Base
+  #....
+  public:
+  def to_af
+    my_class_name = self.class.name.split(/::/).last.downcase # => returns 'user'
+    "#{my_class_name[0,1]}:#{self.id}}"                       # => returns 'us:1230124324'    
+  end
+end
+```
+
+Now, we can use any model's `#to_af` instance method to construct the event string:
+ 
+```ruby
+"#{event.actor.to_af}-#{event.verb}-#{event.target_object.to_af}"
+```
+
+which would now generate `"us:12414325-liked-co:125646456-us:2341425453"`
+
+For any given a user, a feed reader can be created by passing a block that, given a serialized version of the event, can deserialize it into a proper application object. For example, if an event of type 'user X favorited comment by user Y', the serialized form of the event (and stored internally) might look like `"#{user_x.to_af}|favorite|#{comment.to_af}|#{comment.user.to_af}"`.  
+
+We can configure both directions: serialization and de-serialization, in the configuration clause of the feed:
+
+```ruby
+     config[:news_feed].event_serializer   = ->(event) { "#{event.type[0,1]}-#{event.id}" } # generates eg, 'f-123'
+     config[:news_feed].event_deserializer = ->(string) {  
+      type, id = string.split(/-/)
+      # ... reconstruct event from a serialized version
+     } 
+```
+
 
 ## Installation
 
