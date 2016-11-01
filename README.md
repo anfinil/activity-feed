@@ -10,7 +10,9 @@
 
 # ActiveFeed
 
-> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**. This project is sponsored by [Simbi, Inc.](https://simbi.com).
+> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**. 
+> 
+> This project is sponsored by [Simbi, Inc.](https://simbi.com).
 
 ## Overview
 
