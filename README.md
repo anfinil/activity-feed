@@ -52,15 +52,15 @@ It is my hope to keep this gem small and very targeted to solving a specific pro
 A typical activity feed works as follows:
 
  * A user (_an actor_) makes an action that should appear in the feeds of other users, typically actor's followers
- * An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later
- * The event also is mapped to an _audience_: ie. who should see the given event in their feed.
- * Event is _serialized_ in a compact scalar format, and pushed to the user's feed, where the feed can be represented by a fixed-length array, containing the last N activities, most recent first.
+ * An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later, including the _actor_, the _action_, the _action's target_, and perhaps some additional metadata.
+ * The event necessarily maps onto an _audience_ — users who should see it in their feeds
+ * Event is then _serialized_ into a compact scalar format, and pushed to the user's feed, where the feed can be represented by a fixed-length array, containing the last N activities, most recent first.
  * Older activities are pushed out of the array as new ones come in, and are discarded.
  * Since activities in the feed are sorted by the time when each event occurred, but they could be re-arranged or aggregated via a separate process, or during the read time by the rendering engine.
 
-### Write-Time versus Read-Time Feeds
+Because of some of the above reasons, this feed works best in combination with an application eventing frameworks, such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  
 
-This feed works best in a combination with application eventing framework, using any event-dispatching framework such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  As events are dispatched, an application component that generates activity feed must subscribe to a subset of the events — those that must appear in the feed. The events are typically converted to a compact string-based schema, and stored in Redis using several internal data structures.
+### Write-Time versus Read-Time Feeds
 
 This is a _write-time_ activity-feed implementation, where the speed optimization is focused on the _read-time_ performance, and the majority of the work is performed when the event is actually published. When the user requests their feed, it is constructed by returning the rendered versions of the events stored in the user's feed. Because the feed is pre-computed at write time, the rendering phase is very fast, making users happy with a snappy news feed.
 
