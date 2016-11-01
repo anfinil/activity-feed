@@ -10,7 +10,7 @@
 
 # ActiveFeed
 
-> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**.
+> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**. This project is sponsored by [Simbi, Inc.](https://simbi.com).
 
 ## Overview
 
@@ -344,8 +344,13 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/active_feed.
 
-
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
 
+## Acknowledgements
+
+ * This project is conceived and sponsored by [Simbi, Inc.](https://simbi.com).
+ * Author's personal experience at [Wanelo, Inc.](https://wanelo.com) has served as an inspiration.
+
+ 
