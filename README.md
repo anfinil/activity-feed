@@ -1,5 +1,3 @@
-# ActiveFeed
-
 ### WARNING: this project is under active development, and is not yet finished.
 
 [![Gem Version](https://badge.fury.io/rb/active_feed.svg)](http://rubygems.org/gems/active_feed)
@@ -10,48 +8,67 @@
 [![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
 [![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 
+# ActiveFeed
 
-## Fast, Redis-based, Write-Time Activity Feed for Social Networks
+> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**.
 
-This is a "from-the-ground-up" write-up of the activity feed concept, that hopes to fulfill the following purpose:
+## Overview
 
- * To define a minimalistic API for a typical event-based News Feed (a.k.a. Activity Feed)
- * To provide a scalable default backend implementation using Redis
- * To allow connecting the application to multiple independent activity feeds that may or may not share Redis backend.
+This is a "from-the-ground-up" written library that implements the concept of an activity feed, and hopes to address the following goals:
+
+ * To define a minimalistic API for a typical event-based activity feed, without tying it to any concrete backend
+ * To make it easy to implement and plug in a new type of backend, eg. using Couchbase or MongoDB 
+ * To provide a scalable default backend implementation using Redis, which can support millions of users via sharding 
+ * To support multiple activity feeds within the same application, but used for different purposes, eg. activity feed of my followers, versus activity feed of my own actions.
 
 ### Key Features
 
-The following is a short list of high-level features intended to be supported:
+The following is a list of features that are currently slated for v1.0:
 
-1. Updating the feed is generally done for a set of users. Typical example being an event distributed to all followers. Here we support:
+1. **Updating the activity feed** is generally done for a set of users. Typical example being an event distributed to all followers of the person generating the event (ie. "actor"). Here we support:
 
-    * _Publishing_ a new event to all related users.
-    * _Deleting_ an event from all related user feeds.
+    * _Publishing_ a new event to related users
+    * _Deleting_ an event from all related user feeds
     * _Aggregating_ similar events within each user's feed (not planned for v1.0)
+    * _Related users_ are definable in terms of an Array, Enumeration or an `ActiveRecord::Relation`, where using `#find_in_batches` is the recommended approach for performance.
+    
+2. **Reading the feed** is typically done for a given user — the user accessing their application feed. The library provides support for:
 
-3. Reading the feed is done for a given user with the purpose of rendering the news feed.
+    * _Quickly fetching the number of unread activities_ in the user's feed, eg. for the purpose of display the alert badge on the icon.
+    * _Fetching and paginating_ events, eg. for the purpose of rendering them on the UI
+    * _Resetting the last viewing time_ for a given user, so that number of unread activities is reset to 0.
 
-    * Fetching and _paginating_ the news feed items for the purpose of rendering them on the UI.
-    * _Saving the last viewing time_ for a given user.
-    * Fast, _constant time read operations_ on the news feed, for any user due to it's pre-computed design.
-    * Redis backend Compatibility with [`twemproxy`](https://github.com/twitter/twemproxy), and it's ability to shard Redis backend, and to support massive data sets across any number of servers
-    * Quick lookup of the _number of the new (unread)_ items in the user's feed
+3. **Scaling the feed** is done by focusing on high performance in the feed design. and data sharding across many instances, to allow parallel independent queries for concurrent users:
 
-It is my hope to keep this gem small and very targeted to solving a specific problem, which is **to define a basic activity feed API for reading and writing from/to a backend, which can be swapped out with another implementation.**
+    * _Constant time, fast read operations_ on the news feed due to it's pre-computed design, and hash-based storage
+    * _Ability to shard_ data across many servers, and many instances of Redis, by leveraging one or more [`twemproxies`](https://github.com/twitter/twemproxy). Twemproxy can be used to configure sharding, and using sharding **ActiveFeed** can be used to support massive data sets across any number of servers
 
-### Design
+It is my hope to keep this gem small and very targeted to solving a specific problem, which is **to define a basic activity feed API for reading and writing from/to a backend which can be swapped out with another implementation, and to offer a reference implementation using Redis, as well as the direction for scaling the feed.**
 
-This feed works best in a combination with application events, using any event-dispatching framework such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  As events are dispatched, an application component that generates activity feed must subscribe to a subset of the events — those that must appear in the feed. The events are typically converted to a compact string-based schema, and stored in Redis using several internal data structures.
+## Design
 
-This is a _write-time_ activity-feed implementation, where the speed optimization is focused on the _read-time_ performance, and the majority of the work is performed when the event is actually published. When the user requests their feed, it is constructed by returning the rendered versions of the events stored in the user's feed. Because the feed is pre-computed, the rendering phase should be very quick, making users happy with a snappy activity feed in the application.
+### How a Feed Works
 
+A typical activity feed works as follows:
+
+ * A user (_an actor_) makes an action that should appear in the feeds of other users, typically actor's followers
+ * An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later
+ * The event also is mapped to an _audience_: ie. who should see the given event in their feed.
+ * Event is _serialized_ in a compact scalar format, and pushed to the user's feed, where the feed can be represented by a fixed-length array, containing the last N activities, most recent first.
+ * Older activities are pushed out of the array as new ones come in, and are discarded.
+ * Since activities in the feed are sorted by the time when each event occurred, but they could be re-arranged or aggregated via a separate process, or during the read time by the rendering engine.
+
+### Write-Time versus Read-Time Feeds
+
+This feed works best in a combination with application eventing framework, using any event-dispatching framework such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  As events are dispatched, an application component that generates activity feed must subscribe to a subset of the events — those that must appear in the feed. The events are typically converted to a compact string-based schema, and stored in Redis using several internal data structures.
+
+This is a _write-time_ activity-feed implementation, where the speed optimization is focused on the _read-time_ performance, and the majority of the work is performed when the event is actually published. When the user requests their feed, it is constructed by returning the rendered versions of the events stored in the user's feed. Because the feed is pre-computed at write time, the rendering phase is very fast, making users happy with a snappy news feed.
 
 #### Speed vs Real-time Trade-Off
 
 The trade-off here is a possible delay in receiving an event in your feed. Because most of the work is performed at the event generation time, it must update feeds of all users who are subscribed to (or follow) a user (or any other model) that generated the event. If your system allows large audiences (eg, Twitter's celebrities have many millions of followers), then this approach suffers from a 'Bieber Problem'. For more information on the differences between _write-time_ and _read-time_ activity feed, please read [the following blog post by Lee Byron, Facebook](https://hashnode.com/post/architecture-how-would-you-go-about-building-an-activity-feed-like-facebook-cioe6ea7q017aru53phul68t1/answer/ciol0lbaa02q52s530vfqea0t)
 
 Events can be a pure ruby classes, as long as they respond to the required methods (see below). They should also be able to render themselves in whatever formats needed, in order to show up within the application, but this functionality is outside of the scope of this gem.
-
 
 ## Usage
 
@@ -67,43 +84,18 @@ First you need to configure the Feed with a valid backend implementation.
      config[:news_feed].backend = ActiveFeed::Backend::Redis.new(
        redis: -> { ::Redis.new(host: '127.0.0.1') }
      )
+     # how many items can be in the feed
+     config[:news_feed].max_size = 1000           
+     config[:news_feed].namespace = 'nf'  # User's news feed           
      config[:news_feed].default_page_size = 20
-     config[:news_feed].max_size = 1000           # how many items can be in the feed
   end
 ```
 
-Above we've configured the Redis client, passed the proc that creates it into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a maximum of 1000 (typically most recent) events.
-
-#### Event Serialization / De-Serialization
-
-In order for the activity feed data store to remain of a manageable size (in terms of operating RAM), you have two levers to tweak:
-
- 1. How many items can be stored in each individual user's feed, and
- 2. How big is each individual activity feed event as it's stored in the feed.
- 
-
-#### Recommended Scheme of Serialization 
-
-While #1 is typically defined by the Product, #2 is not user-facing, and is something we can try to compact as much as possible. You could use a JSON representation of a small value object, or even a result of `Marshall.dump`. What worked for the authors in the past is using a delimited structure, such as this below:
-
-```ruby
- {{ actor.id }}-{{ verb }}-{{ target_object.id }}-{{ target_object_owner.id }}
-```
-
-In this scheme:
-
- * _actor_ is the person who generated the event
- * _verb_ is the action, eg. "favorited", "liked", "posted", "commented", "followed", etc.
- * _target object_ would be the target of the action, such as a comment that was liked or favorited, etc.
- * _target object owner_ is the author of the comment. 
-
-A real world example would be a string "12414325-liked-125646456-2341425453", which, as you may notice, suffers from one problem: it is not possible, or at least not easily possible, to tell what each number actually is, and what model it corresponds to. 
-
-To solve this, let's imagine that we implement the following method on all models in our Rails application. Below we implement method `#to_af` on `User`, which allows us to convert a user instance into a short-string representation `us:99879879`:
+Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
 
 #### Multiple Independent Activity Feeds
 
-But sometimes a single feed is not enough. What if we wanted to maintain two separate personalized feeds for each user: one would be news articles the user subscribes to, and the other would be a more typical activity feed.
+But sometimes a single feed is not enough. What if we wanted to maintain two separate personalized feeds for each user: one would be news articles the user subscribes to, and the other would be a more typical activity feed. 
 
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing, we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
@@ -114,20 +106,21 @@ require 'redis'
 ActiveFeed.configure do |config|
 
   # This is the feed of news articles based on user subscription preferences.
-
-  config[:news_feed].backend = ActiveFeed::Backend::Redis.new(
-    redis: ::Redis.new(host: '127.0.0.1')
-  )
-  config[:news_feed].per_page = 20
-  config[:news_feed].event_serializer = :to_af
+  config.for(:news_feed) do |c| 
+    c.backend = ActiveFeed::Backend::Redis.new(
+      redis: ::Redis.new(host: '127.0.0.1')
+    )
+    c.per_page = 20
+  end    
 
   # This is the feed of events associated with the followers.
   # We use ConnectionPool because we anticipate higher load.
-
-  config[:followers].backend = ActiveFeed::Backend::Redis.new(
-    redis: ConnectionPool.new(size: 5, timeout: 5) { ::Redis.new(host: '192.168.10.10', port: 9000) }
-  )
-  config[:followers].per_page = 50 
+  config.for(:followers) do |c| 
+    c.backend = ActiveFeed::Backend::Redis.new(
+      redis: ConnectionPool.new(size: 5, timeout: 5) { 
+        ::Redis.new(host: '192.168.10.10', port: 9000) 
+    })
+        
 end
 ```
 
@@ -139,9 +132,9 @@ Each configuration created above automatically generates a constant under the `A
 
 Second feed configuration would have generated `ActivityFeed::Followers`.
 
-### Writing Data to the Feed
+### Publishing Data to the Feed
 
-When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations typically accept an array of users (or IDs)
+When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
 ```ruby
 require 'active_feed'
@@ -161,7 +154,7 @@ or a block — which should yield the next element in the array when called,
 or nil when exhausted.
 
 For any object types besides Integer, ActiveFeed will call a method
-:to_af on the object, in order to receive a string representation of
+`#to_af` on the object, in order to receive a string representation of
 that object.
 
 ```ruby
@@ -169,14 +162,15 @@ that object.
 # which can then be fetched in groups (pages) of users and split into
 # several parallel jobs by ActiveFeed.
 
-@feed_updater = ActiveFeed::NewsFeed.create_updater(User.where(follower: event.actor))
+@feed_updater = ActiveFeed::NewsFeed.updater(User.where(follower: @event.actor))
+@feed_updater.publish() # publish the event
 ```
 
 #### Writing Efficiently, and/or Concurrently
 
 For large data sets it is generally required to use batch operations, instead of looping for each user. If you are using Rails, then the corresponding method of interest is `#find_in_batches`, which can apply to any `ActiveRecord::Relation` instance. This method retrieves a batch of records and then yields the entire batch to the block as an array of models.
 
-If you are not using Rails, you can still use any custom method that yields the entire batch to the block as an array of IDs or models.
+If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
 @feed_updater = ActiveFeed::NewsFeed.create_updater do
@@ -194,12 +188,10 @@ end
   require 'active_feed/reader'
 
   # You can also use just #reader method, instead of #create_reader
-  @feed_reader = ActiveFeed::NewsFeed.create_reader(User.where(username: 'kig').first)  
+  @feed_reader = ActiveFeed::NewsFeed.reader(User.where(username: 'kig').first)  
   @feed_reader.paginate(....) 
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
 ```
-
-Above, you were expected to implement the ApplicationEvents::Base.deserialize method elsewhere in your application.
 
 #### Paginating Feed Activity 
 
@@ -211,6 +203,50 @@ To actually render/display the feed to the user, would typically render each ele
     # => { "name": "FavoriteComment", "user": { "username": "kig" }, .... }"
   end.join(',')
 ```
+
+### Event Serialization & De-Serialization
+
+In order for the activity feed data store to remain of a manageable size (in terms of operating RAM), you have two levers to tweak:
+
+ 1. How many items can be stored in each individual user's feed, and
+ 2. How big is each individual activity feed event as it's stored in the feed's backend.
+
+While #1 is typically defined by the Product, #2 is not user-facing, and is something you should try to compact as much as possible (especially if you anticipate lots of users, eg. millions). 
+
+You could use a JSON or YAML representation of a small value object, or even a result of `Marshall.dump`. What worked for the authors in the past is using a delimited structure. Below we'll walk through an example of how events could be defined in the application, and how we can serialize each event into a short string.
+
+#### Example: Delimited Serialization 
+
+Let's start by defining an event we might create in a system to represent somebody liking a comment.
+
+```ruby
+@event = NewsFeed::FavoritedTargetEvent.new(
+  actor:    current_user,
+  action:   'favorited',
+  target:   @comment,
+  audience: current_user.followers
+)
+```
+
+In this scheme:
+
+ * _actor_ is the person who generated the event
+ * _action_ is a verb in the past tense, eg. "favorited", "liked", "posted", "commented", "followed", etc.
+ * _target_ would be the main subject of the action, such as the comment that was favorited
+ * _audience_ defines a set of users who should see this update. 
+
+Given the above, we can start by converting the above event into a string like so:
+
+```ruby
+@event_serialized = 
+  "#{@event.actor.id}-" + 
+  "#{@event.verb}-" + 
+  "#{@comment.id}"
+```
+
+This would produce, eg. a string such as `"12414325-favorited-125646456"`, which is pretty compact-ish. But, as you may notice, it suffers from one problem: it is not possible to definitively tell what each of the numbers refers to.
+
+To solve this, we need to add entity type – some sort of a code that helps us uniquely and unambiguously determine implement the following method on all models in our Rails application. Below we implement method `#to_af` on `User`, which allows us to convert a user instance into a short-string representation `us:99879879`.
 
 ### Event Serialization
 
@@ -256,13 +292,14 @@ For any given a user, a feed reader can be created by passing a block that, give
 We can configure both directions: serialization and de-serialization, in the configuration clause of the feed:
 
 ```ruby
-     config[:news_feed].event_serializer   = ->(event) { "#{event.type[0,1]}-#{event.id}" } # generates eg, 'f-123'
-     config[:news_feed].event_deserializer = ->(string) {  
-      type, id = string.split(/-/)
-      # ... reconstruct event from a serialized version
-     } 
+  # generates eg, 'f-123'
+  config[:news_feed].event_serializer   = ->(event) { "#{event.type[0,1]}-#{event.id}" } 
+  config[:news_feed].event_deserializer = ->(string) {  
+    type, id = string.split(/-/)     
+    # ... reconstruct an event from a serialized version'
+    EventFactory.from(type).new(id)      
+  } 
 ```
-
 
 ## Installation
 
