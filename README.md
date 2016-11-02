@@ -83,25 +83,21 @@ require 'active_feed'
 require 'redis'
   
 ActiveFeed.configure do |config|
-  config.for(:news_feed) do |news_feed|
+  config.of(:news_feed) do |news_feed|
     news_feed.backend           = ActiveFeed::Backend::Redis.new(
-      redis: -> { ::Redis.new(host: '127.0.0.1') }
+      redis: -> { ::Redis.new(host: '127.0.0.1') },
+      config: news_feed
     )
     # how many items can be in the feed
     news_feed.max_size          = 1000
     news_feed.namespace         = 'nf' # User's news feed
     news_feed.default_page_size = 20
-    news_feed.on_push           = ->(user, new_event) {
-      Logger.info "added an event #{new_event} from the feed of #{user}"
-    }
-    news_feed.on_pop            = ->(user, old_event) {
-      Logger.info "discarding event #{old_event} from the feed of #{user}"
-    }
-    news_feed.on_delete         = ->(user, deleted_event) {
-      Logger.info "deleting an event #{deleted_event} from the feed of #{user}"
-    }
+        
+    news_feed.on(:push,   ->(user, event) { puts "pushed #{event} to #{user}'s feed'"     })
+    news_feed.on(:pop,    ->(user, event) { puts "expired #{event} from #{user}'s feed'"  })
+    news_feed.on(:remove, ->(user, event) { puts "removed #{event} from #{user}'s feed'"  })
   end
-
+end
 ```
 
 Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
@@ -119,7 +115,7 @@ require 'redis'
 ActiveFeed.configure do |config|
 
   # This is the feed of news articles based on user subscription preferences.
-  config.for(:news_feed) do |news_feed| 
+  config.of(:news_feed) do |news_feed| 
     news_feed.backend = ActiveFeed::Backend::Redis.new(
       redis: ::Redis.new(host: '127.0.0.1')
     )
@@ -128,12 +124,12 @@ ActiveFeed.configure do |config|
 
   # This is the feed of events associated with the followers.
   # We use ConnectionPool because we anticipate higher load.
-  config.for(:followers) do |followers_feed| 
+  config.of(:followers) do |followers_feed| 
     followers_feed.backend = ActiveFeed::Backend::Redis.new(
       redis: ConnectionPool.new(size: 5, timeout: 5) { 
         ::Redis.new(host: '192.168.10.10', port: 9000) 
     })
-        
+  end
 end
 ```
 
@@ -141,14 +137,13 @@ end
 
 So how do you access the feed from your code?
 
-Each configuration created above automatically generates a constant under the `ActiveFeed` namespace. When we called `config.for(:news_feed)`, the library created a constant that from now on point to this instance of the feed within the application:
+Each configuration created above automatically generates a constant under the `ActiveFeed` namespace. When we called `config.of(:news_feed)`, the library created a constant that from now on point to this instance of the feed within the application:
  
 ```ruby
-ActivityFeed::NewsFeed == ActivityFeed.for(:news_feed)
-# => true 
-``` 
+ActivityFeed::NewsFeed = ActivityFeed.of(:news_feed)
+```
 
-Second feed configuration would have generated `ActivityFeed::Followers` constant, accessible also via `ActivityFeed.for(:followers)`.
+Second feed configuration would have generated `ActivityFeed::Followers` constant, accessible also via `ActivityFeed.of(:followers)`.
 
 ### Publishing Data to the Feed
 
@@ -161,10 +156,13 @@ require 'active_feed'
 # populated with the given event 
 user_id_list = [1, 4, 545, 234234]
 
-# Next, we instantiate the updater by passing the list of users,
+# Next, we instantiate the feed by passing the list of users,
 # and then we publish the event across all of the corresponding feeds.
-@feed_updater = ActiveFeed::NewsFeed.updater(user_id_list)
-@feed_updater.publish(sort: Time.now, event: event)
+@feed = ActiveFeed::NewsFeed.for(user_id_list)
+# or equvivalent to
+@feed = ActiveFeed.of(:news_feed).for(user_id_list)
+# And then we publish the event to each feed:
+@feed.publish(sort: Time.now, event: event)
 ```
 
 Instead of passing the list of user IDs, you can pass an `ActiveRecord::Relation`, 
@@ -180,8 +178,9 @@ that object.
 # which can then be fetched in groups (pages) of users and split into
 # several parallel jobs by ActiveFeed.
 
-@feed_updater = ActiveFeed::NewsFeed.updater( User.where(follower: @event.actor) )
-@feed_updater.publish() # publish the event
+@follower = User.where(follower: @event.actor)
+@feed = ActiveFeed::NewsFeed.for @follower
+@feed.publish() # publish the event
 ```
 
 #### Writing Efficiently, and/or Concurrently
@@ -191,13 +190,13 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-@feed_updater = ActiveFeed::NewsFeed.create_updater do
+@feed = ActiveFeed::NewsFeed.create_updater do
   User.where(followee: @event.actor).find_in_batches(batch_size: 1000) do |users|
     yield users
   end
 end
 # Will grab users in batches, and push news feed events to their feeds.
-@feed_updater.publish(sort: @event.timestamp, event: @event)
+@feed.publish(sort: @event.timestamp, event: @event)
 ```
 
 ### Reading Data from the Feed
