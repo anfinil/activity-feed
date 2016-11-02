@@ -84,7 +84,7 @@ require 'redis'
   
 ActiveFeed.configure do |config|
   config.of(:news_feed) do |news_feed|
-    news_feed.backend           = ActiveFeed::Backend::Redis.new(
+    news_feed.backend           = ActiveFeed::Backend::RedisBackend.new(
       redis: -> { ::Redis.new(host: '127.0.0.1') },
       config: news_feed
     )
@@ -116,7 +116,7 @@ ActiveFeed.configure do |config|
 
   # This is the feed of news articles based on user subscription preferences.
   config.of(:news_feed) do |news_feed| 
-    news_feed.backend = ActiveFeed::Backend::Redis.new(
+    news_feed.backend = ActiveFeed::Backend::RedisBackend.new(
       redis: ::Redis.new(host: '127.0.0.1')
     )
     news_feed.per_page = 20
@@ -125,7 +125,7 @@ ActiveFeed.configure do |config|
   # This is the feed of events associated with the followers.
   # We use ConnectionPool because we anticipate higher load.
   config.of(:followers) do |followers_feed| 
-    followers_feed.backend = ActiveFeed::Backend::Redis.new(
+    followers_feed.backend = ActiveFeed::Backend::RedisBackend.new(
       redis: ConnectionPool.new(size: 5, timeout: 5) { 
         ::Redis.new(host: '192.168.10.10', port: 9000) 
     })
@@ -137,13 +137,12 @@ end
 
 So how do you access the feed from your code?
 
-Each configuration created above automatically generates a constant under the `ActiveFeed` namespace. When we called `config.of(:news_feed)`, the library created a constant that from now on point to this instance of the feed within the application:
+When we called `config.of(:news_feed)`, the library created a hash key `:news_feed` that from now on will point to this instance of the feed within the application:
  
 ```ruby
-ActivityFeed::NewsFeed = ActivityFeed.of(:news_feed)
+@news_feed_config      = ActivityFeed.of(:news_feed)
+@followers_feed_config = ActivityFeed.of(:followers_feed)
 ```
-
-Second feed configuration would have generated `ActivityFeed::Followers` constant, accessible also via `ActivityFeed.of(:followers)`.
 
 ### Publishing Data to the Feed
 
@@ -158,8 +157,6 @@ user_id_list = [1, 4, 545, 234234]
 
 # Next, we instantiate the feed by passing the list of users,
 # and then we publish the event across all of the corresponding feeds.
-@feed = ActiveFeed::NewsFeed.for(user_id_list)
-# or equvivalent to
 @feed = ActiveFeed.of(:news_feed).for(user_id_list)
 # And then we publish the event to each feed:
 @feed.publish(sort: Time.now, event: event)
