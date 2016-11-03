@@ -167,7 +167,7 @@ When we publish events to the feeds, we typically (although not always) do it fo
     # and then we publish the event across all of the corresponding feeds.
     @feed = ActiveFeed.of(:friends_news).for(users)
     # And then we publish the event to each feed:
-    @feed.publish(sort: Time.now, event: event).to(users)
+    @feed.publish(sort: Time.now, event: event)
 ```
 
 Instead of passing the list of user IDs, you can pass an `ActiveRecord::Relation`, 
