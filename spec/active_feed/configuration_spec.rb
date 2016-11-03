@@ -9,23 +9,21 @@ module ActiveFeed
 
   CONFIG_ACCESSORS = %i(name backend namespace default_page_size max_size on)
   describe Configuration do
-    context '#config' do
+    context 'config accessor' do
       subject { Configuration }
       it('should respond to #config') { is_expected.to respond_to(:config) }
     end
 
-    context 'enclosing multi-configuration hash' do
+    context 'creating and configuring multiple feeds' do
       let(:multi_config) { ActiveFeed.configure }
+
       subject { multi_config }
-
       it('responds to :of') { is_expected.to respond_to(:of) }
-
       it('is a Hash') { is_expected.to be_kind_of(Hash) }
-
       it('is a ConfigurationHash') { is_expected.to be_kind_of(ConfigurationHash) }
 
       context 'when defining a specific feed' do
-        let(:feed_name) { :news_feed }
+        let(:feed_name) { :latest_stories }
         before do
           multi_config.of(feed_name) do |config|
             config.backend = :new_backend
@@ -33,56 +31,49 @@ module ActiveFeed
         end
 
         subject { ActiveFeed.of(feed_name) }
-
         it('responds to :backend') { is_expected.to respond_to(:backend) }
-
         it('has its name correctly set') { expect(subject.name).to eql(feed_name) }
       end
     end
 
     context 'various ways of accessing configuration' do
-      let(:backend) { :stuff }
+      let(:backend) { :mongodb }
 
       before :each do
         ActiveFeed.of(:my_feed) { |c| c.backend = backend; c.namespace = :mfd }
         ActiveFeed.of(:my_feed) { |c| c.per_page = 60 }
       end
 
+      let(:my_feed) { ::ActiveFeed.of(:my_feed) }
+
       context '#backend' do
-        subject { ::ActiveFeed.configure.of(:my_feed).backend }
+        subject { my_feed.backend }
         it('equals the value set in #of') { is_expected.to eq(backend) }
       end
 
       context '#namespace' do
-        subject { ::ActiveFeed.configure.of(:my_feed).namespace }
+        subject { my_feed.namespace }
         it('equals the value set in #of') { is_expected.to eq(:mfd) }
       end
 
       context '#per_page' do
-        subject { ::ActiveFeed.configure.of(:my_feed).per_page }
+        subject { my_feed.per_page }
         it('equals the value set in #of') { is_expected.to eq(60) }
       end
 
       context '#max_size' do
-        subject { ::ActiveFeed.configure.of(:my_feed).max_size }
+        subject { my_feed.max_size }
         it('equals the defualt value') { is_expected.to eq(1000) }
       end
-
-      context 'multiple invocations of #of' do
-        let(:feed_name) { :my_feed }
-        context 'with the same key' do
-          it 'should return the same configuration instance' do
-            expect(ActiveFeed.of(:some_feed)).to_not be_nil
-            expect(ActiveFeed.of(:some_feed)).to equal(ActiveFeed.of(:some_feed))
-          end
-        end
-      end
     end
 
-    context 'invalid feed name' do
-      it 'should raise an exception' do
-        expect { ::ActiveFeed.of }.to raise_error(ArgumentError)
+    context 'when passing namespace as argument' do
+      before :each do
+        ActiveFeed.of(:follower_activity, :ar) { |c| c.backend = true }
       end
+      subject { ActiveFeed.of(:follower_activity).namespace }
+      it('should correctly set the namespace') { is_expected.to eq(:ar) }
     end
+
   end
 end

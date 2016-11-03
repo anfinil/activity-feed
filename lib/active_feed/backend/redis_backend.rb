@@ -1,7 +1,7 @@
-require 'active_feed/backend/abstract_backend'
+require 'active_feed/backend/base'
 module ActiveFeed
   module Backend
-    class RedisBackend < AbstractBackend
+    class RedisBackend < Base
     end
   end
 end

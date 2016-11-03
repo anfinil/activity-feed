@@ -16,7 +16,7 @@ module ActiveFeed
     FeedCallback         = Struct.new(:proc)
 
     # Instance methods
-    def initialize(*args, &block)
+    def initialize(*args)
       super(*args)
 
       unless self.name and self.name.is_a?(Symbol)
@@ -26,7 +26,7 @@ module ActiveFeed
       # set the defaults if not passed in
       self.per_page ||= 50
       self.max_size ||= 1000
-      self.namespace  = name.to_s[0..1].to_sym
+      self.namespace||= name.to_s[0..1].to_sym
 
       # yield self for further customization
       yield self if block_given?
@@ -49,6 +49,10 @@ module ActiveFeed
         yield self.config if block_given?
         self.config
       end
+
+      def clear!
+        self.config.clear if self.config
+      end
     end
   end
 
@@ -60,9 +64,9 @@ module ActiveFeed
 
   class ConfigurationHash < ::Hash
     include Singleton
-    def of(key)
+    def of(key, *args)
       name       = key.to_sym
-      self[name] ||= Configuration.new(name)
+      self[name] ||= Configuration.new(name, *args)
       yield self[name] if block_given?
       self[name]
     end

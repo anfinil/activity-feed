@@ -2,16 +2,16 @@ require 'spec_helper'
 
 module ActiveFeed
   module Backend
-    class FakeBackend < AbstractBackend
+    class FakeBackend < Base
     end
   end
 
   describe Feed do
     User = Struct.new(:username)
-
-    let(:backend) { Backend::FakeBackend.new }
-    let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
     let(:users) { [User.new('kig'), User.new('tom')] }
+
+    let(:backend) { ActiveFeed::Backend::FakeBackend.new(users) }
+    let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
     let(:feed) { Feed.new(users: users, config: configuration) }
     let(:sort) { Time.now }
 
