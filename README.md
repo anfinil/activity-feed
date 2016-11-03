@@ -53,14 +53,22 @@ It is my hope to keep this gem small and very targeted to solving a specific pro
 
 A typical activity feed works as follows:
 
- * A user (_an actor_) makes an action that should appear in the feeds of other users, typically actor's followers
- * An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later, including the _actor_, the _action_, the _action's target_, and perhaps some additional metadata.
- * The event necessarily maps onto an _audience_ — users who should see it in their feeds
- * Event is then _serialized_ into a compact scalar format, and pushed to the user's feed, where the feed can be represented by a fixed-length array, containing the last N activities, most recent first.
- * Older activities are pushed out of the array as new ones come in, and are discarded.
- * Since activities in the feed are sorted by the time when each event occurred, but they could be re-arranged or aggregated via a separate process, or during the read time by the rendering engine.
+1. user (_an actor_) makes an action that should appear in the feeds of other users, typically actor's followers
+2. An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later, including the _actor_, the _action_, the _action's target_, and perhaps some additional metadata.
+3. The event necessarily maps onto an _audience_ — users who should see it in their feeds
+4. Event is then _serialized_ into a compact scalar format, and pushed to the user's feed, where the feed can be represented by a fixed-length array, containing the last N activities, most recent first.
+5. Older activities are pushed out of the array as new ones come in, and are discarded.
+6. Since activities in the feed are sorted by the time when each event occurred, but they could be re-arranged or aggregated via a separate process, or during the read time by the rendering engine.
 
 Because of some of the above reasons, this feed works best in combination with an application eventing frameworks, such as [Ventable](https://github.com/kigster/ventable), or [Wisper](https://github.com/krisleech/wisper).  
+
+### UML
+
+Below is the high-level UML diagram that shows how the internals of the active feed work:
+
+[![UML](doc/active-feed-uml.png)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
+
+
 
 ### Write-Time versus Read-Time Feeds
 
@@ -79,25 +87,25 @@ First you need to configure the Feed with a valid backend implementation.
 ### Configuration
 
 ```ruby
-require 'active_feed'
-require 'redis'
-  
-ActiveFeed.configure do |config|
-  config.of(:news_feed) do |news_feed|
-    news_feed.backend           = ActiveFeed::Backend::RedisBackend.new(
-      redis: -> { ::Redis.new(host: '127.0.0.1') },
-      config: news_feed
-    )
-    # how many items can be in the feed
-    news_feed.max_size          = 1000
-    news_feed.namespace         = 'nf' # User's news feed
-    news_feed.default_page_size = 20
-        
-    news_feed.on(:push,   ->(user, event) { puts "pushed #{event} to #{user}'s feed'"     })
-    news_feed.on(:pop,    ->(user, event) { puts "expired #{event} from #{user}'s feed'"  })
-    news_feed.on(:remove, ->(user, event) { puts "removed #{event} from #{user}'s feed'"  })
-  end
-end
+    require 'active_feed'
+    require 'redis'
+      
+    ActiveFeed.configure do |config|
+      config.of(:friends_news) do |friends_news|
+        friends_news.backend      = ActiveFeed::Backend::RedisBackend.new(
+          redis: -> { ::Redis.new(host: '127.0.0.1') },
+          feed: friends_news
+        )
+        # how many items can be in the feed
+        friends_news.max_size     = 1000
+        friends_news.per_page     = 20
+            
+        # These optional callbacks allow handling activities that are added or removed from the feed.     
+        friends_news.on(:push,   ->(user, event) { puts "pushed #{event} to #{user}'s feed'"     })
+        friends_news.on(:pop,    ->(user, event) { puts "expired #{event} from #{user}'s feed'"  })
+        friends_news.on(:remove, ->(user, event) { puts "removed #{event} from #{user}'s feed'"  })
+      end
+    end
 ```
 
 Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
@@ -109,39 +117,39 @@ But sometimes a single feed is not enough. What if we wanted to maintain two sep
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing – as events might have large audiences — we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
 ```ruby
-require 'active_feed'
-require 'redis'
-
-ActiveFeed.configure do |config|
-
-  # This is the feed of news articles based on user subscription preferences.
-  config.of(:news_feed) do |news_feed| 
-    news_feed.backend = ActiveFeed::Backend::RedisBackend.new(
-      redis: ::Redis.new(host: '127.0.0.1')
-    )
-    news_feed.per_page = 20
-  end    
-
-  # This is the feed of events associated with the followers.
-  # We use ConnectionPool because we anticipate higher load.
-  config.of(:followers) do |followers_feed| 
-    followers_feed.backend = ActiveFeed::Backend::RedisBackend.new(
-      redis: ConnectionPool.new(size: 5, timeout: 5) { 
-        ::Redis.new(host: '192.168.10.10', port: 9000) 
-    })
-  end
-end
+    require 'active_feed'
+    require 'redis'
+    
+    ActiveFeed.configure do |config|
+    
+      # This is the feed of news articles based on user subscription preferences.
+      config.of(:friends_news) do |friends_news| 
+        friends_news.backend = ActiveFeed::Backend::RedisBackend.new(
+          redis: ::Redis.new(host: '127.0.0.1')
+        )
+        friends_news.per_page = 20
+      end    
+    
+      # This is the feed of events associated with the followers.
+      # We use ConnectionPool because we anticipate higher load.
+      config.of(:followers) do |followers_feed| 
+        followers_feed.backend = ActiveFeed::Backend::RedisBackend.new(
+          redis: ConnectionPool.new(size: 5, timeout: 5) { 
+            ::Redis.new(host: '192.168.10.10', port: 9000) 
+        })
+      end
+    end
 ```
 
 #### Referencing Multiple Feeds
 
-So how do you access the feed from your code?
+So how do you access the feed from your code? Please check the UML diagram above to see how objects are returned.
 
-When we called `config.of(:news_feed)`, the library created a hash key `:news_feed` that from now on will point to this instance of the feed within the application:
+When we called `ActivityFeed.of(:friends_news)` for the very first time, the library has created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
  
 ```ruby
-@news_feed_config      = ActivityFeed.of(:news_feed)
-@followers_feed_config = ActivityFeed.of(:followers_feed)
+    ActivityFeed.of(:friends_news)
+    ActivityFeed.of(:followers_feed)
 ```
 
 ### Publishing Data to the Feed
@@ -149,17 +157,17 @@ When we called `config.of(:news_feed)`, the library created a hash key `:news_fe
 When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
 ```ruby
-require 'active_feed'
-
-# First we define list of users (or "owners") of the activity feed to be
-# populated with the given event 
-user_id_list = [1, 4, 545, 234234]
-
-# Next, we instantiate the feed by passing the list of users,
-# and then we publish the event across all of the corresponding feeds.
-@feed = ActiveFeed.of(:news_feed).for(user_id_list)
-# And then we publish the event to each feed:
-@feed.publish(sort: Time.now, event: event)
+    require 'active_feed'
+    
+    # First we define list of users (or "owners") of the activity feed to be
+    # populated with the given event 
+    users = [1, 4, 545, 234234]
+    
+    # Next, we instantiate the feed by passing the list of users,
+    # and then we publish the event across all of the corresponding feeds.
+    @feed = ActiveFeed.of(:friends_news).for(users)
+    # And then we publish the event to each feed:
+    @feed.publish(sort: Time.now, event: event).to(users)
 ```
 
 Instead of passing the list of user IDs, you can pass an `ActiveRecord::Relation`, 
@@ -171,13 +179,13 @@ For any object types besides Integer, ActiveFeed will call a method
 that object.
 
 ```ruby
-# This is just an example of how you could return AREL statement
-# which can then be fetched in groups (pages) of users and split into
-# several parallel jobs by ActiveFeed.
-
-@follower = User.where(follower: @event.actor)
-@feed = ActiveFeed::NewsFeed.for @follower
-@feed.publish() # publish the event
+    # This is just an example of how you could return AREL statement
+    # which can then be fetched in groups (pages) of users and split into
+    # several parallel jobs by ActiveFeed.
+    
+    @follower = User.where(follower: @event.actor)
+    @feed = ActiveFeed.of(:followers_feed).for(@follower)
+    @feed.publish(event: @event, sort: Time.now) # publish the event sorted by time.
 ```
 
 #### Writing Efficiently, and/or Concurrently
@@ -187,7 +195,7 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-@feed = ActiveFeed::NewsFeed.create_updater do
+@feed = ActiveFeed.of(:news_feed).create_updater do
   User.where(followee: @event.actor).find_in_batches(batch_size: 1000) do |users|
     yield users
   end
@@ -202,20 +210,28 @@ end
   require 'active_feed/reader'
 
   # You can also use just #reader method, instead of #create_reader
-  @feed_reader = ActiveFeed::NewsFeed.reader(User.where(username: 'kig').first)  
-  @feed_reader.paginate(....) 
+  @feed = ActiveFeed.of(:news_feed).for(User.where(username: 'kig').first)  
+  @feed.paginate(page: 1, per_page: 20)  
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
+  
+  # OR You can also use this method kind of like #map, by
+  # not setting the :page parameter, and passing a block. The block will
+  # receive the page number and the list of events as aruguments.
+  @feed.paginate(per_page: 20) do |page, events|
+    # do something with the list of events for this page
+  end
+end
 ```
 
-#### Paginating Feed Activity 
+#### Rendering a Single Page 
 
-To actually render/display the feed to the user, would typically render each element (or event) returned by the `#paginate` call:
+To actually render/display the feed to the user, we can _render_ each element (or event) returned by the `#paginate` call:
 
 ```ruby
-  json = @feed_reader.paginate(page: 1, per_page: 20).map do |event|
+  json = @feed.paginate(page: 1, per_page: 20).map do |event|
     event.render(:json)                                    
     # => { "name": "FavoriteComment", "user": { "username": "kig" }, .... }"
-  end.join(',')
+  end.join(', ')
 ```
 
 ### Event Serialization & De-Serialization
@@ -307,8 +323,8 @@ We can configure both directions: serialization and de-serialization, in the con
 
 ```ruby
   # generates eg, 'f-123'
-  config[:news_feed].event_serializer   = ->(event) { "#{event.type[0,1]}-#{event.id}" } 
-  config[:news_feed].event_deserializer = ->(string) {  
+  config[:friends_news].event_serializer   = ->(event) { "#{event.type[0,1]}-#{event.id}" } 
+  config[:friends_news].event_deserializer = ->(string) {  
     type, id = string.split(/-/)     
     # ... reconstruct an event from a serialized version'
     EventFactory.from(type).new(id)      
