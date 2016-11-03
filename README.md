@@ -66,7 +66,7 @@ Because of some of the above reasons, this feed works best in combination with a
 
 Below is the high-level UML diagram that shows how the internals of the active feed work:
 
-[![UML](doc/active-feed-uml.png)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
+[![UML](doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/active_feed/master/doc/active-feed-uml.png)
 
 
 
