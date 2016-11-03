@@ -195,16 +195,17 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-@feed = ActiveFeed.of(:news_feed).create_updater do
-  User.where(followee: @event.actor).find_in_batches(batch_size: 1000) do |users|
-    yield users
-  end
-end
-# Will grab users in batches, and push news feed events to their feeds.
-@feed.publish(sort: @event.timestamp, event: @event)
+    @feed = ActiveFeed.of(:news_feed).for do
+      User.where(followee: @event.actor)
+          .find_in_batches(batch_size: 1000) { |users| yield(users) }
+    end
+    
+    # Now the #publish method can grab users in batches, and push the event, 
+    # possibly in parallel as a possible optimization.
+    @feed.publish(sort: @event.timestamp, event: @event)
 ```
 
-### Reading Data from the Feed
+### Reading Data from the Feed using #paginate and #find_in_batches
 
 ```ruby
   require 'active_feed/reader'
@@ -213,12 +214,13 @@ end
   @feed = ActiveFeed.of(:news_feed).for(User.where(username: 'kig').first)  
   @feed.paginate(page: 1, per_page: 20)  
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
-  
-  # OR You can also use this method kind of like #map, by
-  # not setting the :page parameter, and passing a block. The block will
-  # receive the page number and the list of events as aruguments.
-  @feed.paginate(per_page: 20) do |page, events|
-    # do something with the list of events for this page
+```
+
+OR You can also use another method #find_in_batches, which is meant to emulate similar method available in Rails framework. The method can be configured with different batch size, and yields a up to max events to the block defined.
+
+```ruby
+  @feed.find_in_batches(batch_size: 100) do |events|
+    # do something with the list of events for this batch.
   end
 end
 ```
