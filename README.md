@@ -1,6 +1,6 @@
 ### WARNING: this project is under active development, and is not yet finished.
 
-[![Gem Version](https://badge.fury.io/rb/active_feed.svg)](http://rubygems.org/gems/active_feed)
+[![Gem Version](https://badge.fury.io/rb/activefeed.svg)](https://badge.fury.io/rb/activefeed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activefeed/master/LICENSE.txt)
 
 [![Build Status](https://travis-ci.org/kigster/activefeed.svg?branch=master)](https://travis-ci.org/kigster/activefeed)
