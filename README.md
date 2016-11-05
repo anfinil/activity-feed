@@ -1,9 +1,9 @@
 ### WARNING: this project is under active development, and is not yet finished.
 
 [![Gem Version](https://badge.fury.io/rb/active_feed.svg)](http://rubygems.org/gems/active_feed)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/active_feed/master/LICENSE.txt)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activefeed/master/LICENSE.txt)
 
-[![Build Status](https://travis-ci.org/kigster/active_feed.svg?branch=master)](https://travis-ci.org/kigster/active_feed)
+[![Build Status](https://travis-ci.org/kigster/activefeed.svg?branch=master)](https://travis-ci.org/kigster/activefeed)
 [![Code Climate](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/gpa.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 [![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
 [![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
@@ -18,7 +18,7 @@
 
 Here is a typical text-based activity feed that is so common today on social networks:
 
-[![Example](doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/active_feed/master/doc/active-feed-example.png)
+[![Example](doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
 
 
 ## Overview
@@ -73,7 +73,7 @@ Because of some of the above reasons, this feed works best in combination with a
 
 Below is the high-level UML diagram that shows how the internals of the active feed work:
 
-[![UML](doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/active_feed/master/doc/active-feed-uml.png)
+[![UML](doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
 
 ### Write-Time versus Read-Time Feeds
 
@@ -92,7 +92,7 @@ First you need to configure the Feed with a valid backend implementation.
 ### Configuration
 
 ```ruby
-    require 'active_feed'
+    require 'activefeed'
     require 'redis'
       
     ActiveFeed.configure do |config|
@@ -122,7 +122,7 @@ But sometimes a single feed is not enough. What if we wanted to maintain two sep
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing – as events might have large audiences — we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
 ```ruby
-    require 'active_feed'
+    require 'activefeed'
     require 'redis'
     
     ActiveFeed.configure do |config|
@@ -153,8 +153,15 @@ So how do you access the feed from your code? Please check the UML diagram above
 When we called `ActivityFeed.of(:friends_news)` for the very first time, the library has created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
  
 ```ruby
-    ActivityFeed.of(:friends_news)
-    ActivityFeed.of(:followers_feed)
+   ActivityFeed.of(:friends_news) 
+   # is the same as 
+   ActivityFeed::FriendsNews
+```
+While
+```ruby
+   ActivityFeed.of(:followers_feed)
+   # is the same as
+   ActivityFeed::FollowersFeed
 ```
 
 ### Publishing Data to the Feed
@@ -162,7 +169,7 @@ When we called `ActivityFeed.of(:friends_news)` for the very first time, the lib
 When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
 ```ruby
-    require 'active_feed'
+    require 'activefeed'
     
     # First we define list of users (or "owners") of the activity feed to be
     # populated with the given event 
@@ -170,7 +177,7 @@ When we publish events to the feeds, we typically (although not always) do it fo
     
     # Next, we instantiate the feed by passing the list of users,
     # and then we publish the event across all of the corresponding feeds.
-    @feed = ActiveFeed.of(:friends_news).for(users)
+    @feed = ActiveFeed::FriendsNews.for(users)
     # And then we publish the event to each feed:
     @feed.publish(sort: Time.now, event: event)
 ```
@@ -213,7 +220,7 @@ If you are not using Rails, you can still use any custom method that yields batc
 ### Reading Data from the Feed using #paginate and #find_in_batches
 
 ```ruby
-  require 'active_feed/reader'
+  require 'activefeed'
 
   # You can also use just #reader method, instead of #create_reader
   @feed = ActiveFeed.of(:news_feed).for(User.where(username: 'kig').first)  
@@ -343,7 +350,7 @@ We can configure both directions: serialization and de-serialization, in the con
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'active_feed'
+    gem 'activefeed'
 ```
 
 And then execute:
@@ -352,7 +359,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install active_feed
+    $ gem install activefeed
 
 
 ## Development
@@ -363,7 +370,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/active_feed.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activefeed
 
 ## License
 

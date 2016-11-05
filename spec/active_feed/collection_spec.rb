@@ -6,19 +6,18 @@ module ActiveFeed
     end
   end
 
-  describe Feed do
+  describe Collection do
     User = Struct.new(:username)
-    let(:users) { [User.new('kig'), User.new('tom')] }
-
-    let(:backend) { ActiveFeed::Backend::FakeBackend.new(users) }
+    let(:backend) { ActiveFeed::Backend::FakeBackend.new }
     let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
-    let(:feed) { Feed.new(users: users, config: configuration) }
+    let(:users) { [User.new('kig'), User.new('tom')] }
+    let(:collection) { Collection.new(users: users, config: configuration) }
     let(:sort) { Time.now }
 
     it 'should delegate certain methods' do
-      expect(feed.users).to eq(users)
+      expect(collection.users).to eq(users)
       expect(backend).to receive(:publish).with(users: users, event: 1, sort: sort)
-      feed.publish(event: 1, sort: sort)
+      collection.publish(event: 1, sort: sort)
     end
   end
 end

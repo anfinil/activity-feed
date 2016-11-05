@@ -1,21 +1,11 @@
 module ActiveFeed
   module Backend
     class Base
-      attr_accessor :users, :event
-
-      class << self
-        def for(*args)
-          self.new(*args)
-        end
-      end
-
       # @param users is either an array of models that respond to +#to_af+, or a proc that yields a batch of users
-      def initialize(users, event = nil)
-        self.users = users
-        self.event = event
+      def initialize
       end
 
-      def publish!(sort: 1)
+      def publish!(user:, event:, sort: 1)
       end
 
       # Removes all activity feed from the given set of users

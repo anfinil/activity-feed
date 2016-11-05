@@ -4,14 +4,14 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'active_feed/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'active_feed'
+  spec.name          = 'activefeed'
   spec.version       = ActiveFeed::VERSION
   spec.authors       = ['Konstantin Gredeskoul']
   spec.email         = ['kigster@gmail.com']
 
   spec.summary       = %q{This gem implements a Redis-backed time-ordered activity feed for social networks.}
   spec.description   = %q{This gem implements a Redis-backed time-ordered activity feed for social networks.}
-  spec.homepage      = 'https://github.com/kigster/active_feed'
+  spec.homepage      = 'https://github.com/kigster/activefeed'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject do |f|
@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hashie'
   spec.add_dependency 'redis', '~> 3.3'
   spec.add_dependency 'connection_pool', '~> 2.2'
+  spec.add_dependency 'activesupport'
 
   spec.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
 

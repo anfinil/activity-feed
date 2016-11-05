@@ -1,5 +1,6 @@
 require 'hashie/mash'
 require 'singleton'
+require 'active_support/inflector'
 
 module ActiveFeed
 
@@ -30,6 +31,16 @@ module ActiveFeed
 
       # yield self for further customization
       yield self if block_given?
+    end
+
+    def for(users)
+      if users.is_a?(Proc) or
+        users.is_a?(Array) or
+        users.is_a?(Enumerable)
+        ActiveFeed::Collection.new(users: users, config: self)
+      else
+        ActiveFeed::Feed.new(user: users, config: self)
+      end
     end
 
     def on(type, &block)
@@ -64,11 +75,20 @@ module ActiveFeed
 
   class ConfigurationHash < ::Hash
     include Singleton
+
     def of(key, *args)
       name       = key.to_sym
       self[name] ||= Configuration.new(name, *args)
+      define_feed_constant(name)
       yield self[name] if block_given?
       self[name]
+    end
+
+    private
+
+    def define_feed_constant(name)
+      class_name = name.to_s.camelize.to_sym
+      ActiveFeed.const_set(class_name, self[name]) unless ActiveFeed.const_defined?(class_name)
     end
   end
 

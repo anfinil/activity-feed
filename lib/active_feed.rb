@@ -1,7 +1,9 @@
-require 'active_feed/version'
+require 'forwardable'
 
+require 'active_feed/version'
 require 'active_feed/configuration'
 require 'active_feed/feed'
+require 'active_feed/collection'
 require 'active_feed/backend'
 
 module ActiveFeed

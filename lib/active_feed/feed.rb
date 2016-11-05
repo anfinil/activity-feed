@@ -1,34 +1,32 @@
-require 'forwardable'
 module ActiveFeed
   class Feed
-    FORWARDED_WRITE_METHODS = %i(publish remove reset aggregate reset_last_read)
-    FORWARDED_READ_METHODS  = %i(paginate all filter unread_count)
+    extend Forwardable
+    def_delegators :@config, :backend
 
-    attr_accessor :config
-    attr_accessor :backend
-    attr_accessor :users
+    attr_accessor :user, :config
 
-    def initialize(users: [], config: nil)
-      self.users   = users
-      self.config  = config
-      self.backend = config.backend if config && config.respond_to?(:backend)
+    # @param user is either an array of models that respond
+    # to +#to_af+, or a proc that yields a batch of users
+    def initialize(user:, config:)
+      self.user = user
+      self.config = config
     end
 
-    def method_missing(name, args, &block)
-      super unless FORWARDED_READ_METHODS.include?(name) ||
-        FORWARDED_WRITE_METHODS.include?(name)
+    def publish!(sort:)
 
-      self.class.send(:define_method, name) do |args|
-        backend.send(name, with_users(args), &block)
-      end
-
-      self.send(name, args, &block) if self.respond_to?(name)
     end
 
-    private
+    # Removes the current event (if available) from the given set of users
+    def remove!
+    end
 
-    def with_users(args)
-      args.merge!({ users: users  })
+    def paginate(page: 1, per_page: config.per_page)
+    end
+
+    def unread_count
+    end
+
+    def reset_last_read
     end
   end
 end
