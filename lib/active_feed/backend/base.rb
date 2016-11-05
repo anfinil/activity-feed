@@ -1,32 +1,25 @@
 module ActiveFeed
   module Backend
     class Base
-      # @param users is either an array of models that respond to +#to_af+, or a proc that yields a batch of users
-      def initialize
+      def push(user, event, score)
       end
 
-      def publish!(user:, event:, sort: 1)
+      def clear
       end
 
-      # Removes all activity feed from the given set of users
-      def wipe!
+      def remove(event)
       end
 
-      # Removes the current event (if available) from the given set of users
-      def remove!
+      def paginate(user, page, per_page)
       end
 
-      # This function walks via the feed, and
-      def aggregate_similar!
+      def unseen_count(user)
       end
 
-      def paginate(user:, page: 1, per_page:)
+      def count(user)
       end
 
-      def unread_count(user:)
-      end
-
-      def mark_read(user:)
+      def see(user)
       end
     end
   end

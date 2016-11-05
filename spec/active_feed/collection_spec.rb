@@ -11,7 +11,7 @@ module ActiveFeed
     let(:backend) { ActiveFeed::Backend::FakeBackend.new }
     let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
     let(:users) { [User.new('kig'), User.new('tom')] }
-    let(:collection) { Collection.new(users: users, config: configuration) }
+    let(:collection) { Collection.new(users, configuration) }
     let(:sort) { Time.now }
 
     it 'should delegate certain methods' do

@@ -10,7 +10,7 @@ module ActiveFeed
     attr_accessor :backend
     attr_accessor :users
 
-    def initialize(users:, config:)
+    def initialize(users, config)
       self.users   = users
       self.config  = config
       self.backend = config.backend if config && config.respond_to?(:backend)

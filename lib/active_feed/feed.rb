@@ -7,13 +7,14 @@ module ActiveFeed
 
     # @param user is either an array of models that respond
     # to +#to_af+, or a proc that yields a batch of users
-    def initialize(user:, config:)
+    def initialize(user, config)
       self.user = user
+      raise ObjectDoesNotImplementToAFError.new(user) unless user.respond_to?(:to_af)
       self.config = config
     end
 
-    def publish!(sort:)
-
+    def publish!(event, sort)
+      raise ObjectDoesNotImplementToAFError.new(event) unless event.respond_to?(:to_af)
     end
 
     # Removes the current event (if available) from the given set of users

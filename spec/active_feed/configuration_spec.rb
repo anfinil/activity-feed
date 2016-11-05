@@ -73,8 +73,8 @@ module ActiveFeed
     end
 
     context 'generating feed instances' do
-      let(:user1) { double('Fred') }
-      let(:user2) { double('Josh') }
+      let(:user1) { double('Fred', to_af: 'fred') }
+      let(:user2) { double('Josh', to_af: 'josh' ) }
       let(:feed) { ActiveFeed.of(:collection).for(user_list) }
       context 'for multiple users' do
         let(:user_list) { [user1, user2] }

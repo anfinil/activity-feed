@@ -37,9 +37,9 @@ module ActiveFeed
       if users.is_a?(Proc) or
         users.is_a?(Array) or
         users.is_a?(Enumerable)
-        ActiveFeed::Collection.new(users: users, config: self)
+        ActiveFeed::Collection.new(users, self)
       else
-        ActiveFeed::Feed.new(user: users, config: self)
+        ActiveFeed::Feed.new(users, self)
       end
     end
 

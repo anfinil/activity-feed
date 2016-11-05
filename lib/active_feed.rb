@@ -8,7 +8,11 @@ require 'active_feed/backend'
 
 module ActiveFeed
   class Error < StandardError; end
-
+  class ObjectDoesNotImplementToAFError < Error
+    def initialize(object)
+      super("Object of type #{object.class} value #{object} did not respond to #to_af")
+    end
+  end
   class << self
     def configure(&block)
       ActiveFeed::Configuration.send(:configure, &block)
