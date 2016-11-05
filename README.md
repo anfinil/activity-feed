@@ -28,7 +28,7 @@ This project is sponsored by [Simbi, Inc.](https://simbi.com)
 
 Here is a typical text-based activity feed that is so common today on social networks:
 
-[![Example](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
+[![Example](https://raw.githubusercontent.com/kigster/activefeed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
 
 ### Overview
 

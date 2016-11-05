@@ -27,7 +27,7 @@ Because of some of the above reasons, this feed works best in combination with a
 
 Below is the high-level UML diagram that shows how the internals of the active feed work:
 
-[![UML](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
+[![UML](https://raw.githubusercontent.com/kigster/activefeed/master/uml/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
 
 ### Write-Time versus Read-Time Feeds
 
