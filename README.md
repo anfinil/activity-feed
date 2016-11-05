@@ -1,9 +1,9 @@
 ## ActiveFeed
 
 
-This is a ruby implementation of **a fast and scalable "write-time" activity feed for a typical social network-like application. The library provides a default Redis-based backend implementation, but the API allows to swap it out relatively easily.**. 
+This is a ruby implementation of a fast activity feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based backend implementation is provided, with the API supporting new backends very easily.** 
  
-__This project is sponsored by [Simbi, Inc.](https://simbi.com)_
+_This project is sponsored by [Simbi, Inc.](https://simbi.com)_
 
 > **WARNING: this project is under active development, and is not yet finished**
 
