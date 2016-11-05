@@ -18,7 +18,7 @@
 
 Here is a typical text-based activity feed that is so common today on social networks:
 
-[![Example](doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
+[![Example](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
 
 
 ## Overview
@@ -73,7 +73,7 @@ Because of some of the above reasons, this feed works best in combination with a
 
 Below is the high-level UML diagram that shows how the internals of the active feed work:
 
-[![UML](doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
+[![UML](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
 
 ### Write-Time versus Read-Time Feeds
 
