@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'connection_pool', '~> 2.2'
   spec.add_dependency 'activesupport'
 
+  spec.add_development_dependency 'yard'
   spec.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
 
   spec.add_development_dependency 'bundler'

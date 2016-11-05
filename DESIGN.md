@@ -1,18 +1,19 @@
 # ActiveFeed — _Design_ 
 
-> [Overview, Usage and Installation](README.md)
 
-> **[Design](DESIGN.md)**
+> [Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)
 
-> [Serialization and De-Serialization](SERIALIZATION.md)
+> **[Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)**
 
-> [Key Features](FEATURES.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+
+> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
 
 
 ### How a Feed Works
 
 A typical activity feed works as follows:
-
+``
 1. user (_an actor_) makes an action that should appear in the feeds of other users, typically actor's followers
 2. An activity _event_ is dispatched by the application that contains everything needed to render this event in the newsfeed later, including the _actor_, the _action_, the _action's target_, and perhaps some additional metadata.
 3. The event necessarily maps onto an _audience_ — users who should see it in their feeds

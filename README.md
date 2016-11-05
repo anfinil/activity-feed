@@ -1,13 +1,11 @@
-> **[Overview, Usage and Installation](README.md)**
-
-> *[Design](DESIGN.md)*
-
-> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
-
-> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+## ActiveFeed
 
 
-### WARNING: this project is under active development, and is not yet finished.
+This is a ruby implementation of **a fast and scalable "write-time" activity feed for typical Social Networks, that comes with a Redis-based default backend implementation, but allows that to be swapped out**. 
+ 
+This project is sponsored by [Simbi, Inc.](https://simbi.com)
+
+> **WARNING: this project is under active development, and is not yet finished**
 
 [![Gem Version](https://badge.fury.io/rb/activefeed.svg)](https://badge.fury.io/rb/activefeed)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activefeed/master/LICENSE.txt)
@@ -17,19 +15,22 @@
 [![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
 [![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 
-# ActiveFeed
 
-> **A fast and scalable "write-time" activity feed for Social Networks, with a Redis-based default backend implementation**. 
-> 
-> This project is sponsored by [Simbi, Inc.](https://simbi.com)
+> **[Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)**
 
-## What's an Activity Feed?
+> [Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)
+
+> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+
+> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
+
+### What's an Activity Feed?
 
 Here is a typical text-based activity feed that is so common today on social networks:
 
 [![Example](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
 
-## Overview
+### Overview
 
 This is a "from-the-ground-up" written library that implements the concept of an activity feed, and hopes to address the following goals:
 
@@ -38,11 +39,11 @@ This is a "from-the-ground-up" written library that implements the concept of an
  * To provide a scalable default backend implementation using Redis, which can support millions of users via sharding 
  * To support multiple activity feeds within the same application, but used for different purposes, eg. activity feed of my followers, versus activity feed of my own actions.
 
-## Usage
+### Usage
 
 First you need to configure the Feed with a valid backend implementation.
 
-### Configuration
+#### Configuration
 
 ```ruby
     require 'activefeed'
@@ -62,7 +63,7 @@ First you need to configure the Feed with a valid backend implementation.
 
 Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
 
-#### Multiple Independent Activity Feeds
+##### Multiple Independent Activity Feeds
 
 But sometimes a single feed is not enough. What if we wanted to maintain two separate personalized feeds for each user: one would be news articles the user subscribes to, and the other would be a more typical activity feed. 
 
@@ -93,7 +94,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
     end
 ```
 
-#### Referencing Multiple Feeds
+##### Referencing Multiple Feeds
 
 So how do you access the feed from your code? Please check the UML diagram above to see how objects are returned.
 
@@ -108,7 +109,7 @@ Both syntaxes can be used interchangeably, just make sure you execute initializa
    # => true
 ```
 
-### Publishing Data to the Feed
+#### Publishing Data to the Feed
 
 When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
@@ -144,7 +145,7 @@ that object.
     @feed.publish(event: @event, sort: Time.now) # publish the event sorted by time.
 ```
 
-#### Writing Efficiently, and/or Concurrently
+##### Writing Efficiently, and/or Concurrently
 
 For large data sets it is generally required to use batch operations, instead of looping for each user. If you are using Rails, then the corresponding method of interest is `#find_in_batches`, which can apply to any `ActiveRecord::Relation` instance. This method retrieves a batch of records and then yields the entire batch to the block as an array of models.
 
@@ -161,7 +162,7 @@ If you are not using Rails, you can still use any custom method that yields batc
     @feed.publish(event: @event)
 ```
 
-### Reading the Feed Using `#paginate` and `#find_in_batches`
+#### Reading the Feed Using `#paginate` and `#find_in_batches`
 
 ```ruby
   require 'activefeed'
@@ -181,7 +182,7 @@ OR You can also use another method `#find_in_batches`, which is meant to emulate
 end
 ```
 
-### Rendering a Single Page 
+#### Rendering a Single Page 
 
 To actually render/display the feed to the user, we can _render_ each element (or event) returned by the `#paginate` call:
 
@@ -192,7 +193,7 @@ To actually render/display the feed to the user, we can _render_ each element (o
   end.join(', ')
 ```
 
-## Installation
+### Installation
 
 Add this line to your application's Gemfile:
 
@@ -209,21 +210,21 @@ Or install it yourself as:
     $ gem install activefeed
 
 
-## Development
+### Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
-## Contributing
+### Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activefeed
 
-## License
+### License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
 
-## Acknowledgements
+### Acknowledgements
 
  * This project is conceived and sponsored by [Simbi, Inc.](https://simbi.com).
  * Author's personal experience at [Wanelo, Inc.](https://wanelo.com) has served as an inspiration.

@@ -1,13 +1,13 @@
 # ActiveFeed — _Key Features_ 
 
 
-> [Overview, Usage and Installation](README.md)
+> [Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)
 
-> [Design](DESIGN.md)
+> [Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)
 
-> [Serialization and De-Serialization](SERIALIZATION.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
 
-> **[Key Features](FEATURES.md)**
+> **[Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)**
 
 
 The folhttps://github.com/kigster/activefeed/blob/master/SERIALIZATION.md of features that are lated for v1.0:
