@@ -7,7 +7,7 @@ module ActiveFeed
   end
 
   describe Collection do
-    User = Struct.new(:username)
+    User = Struct.new(:username, :to_af)
     let(:backend) { ActiveFeed::Backend::FakeBackend.new }
     let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
     let(:users) { [User.new('kig'), User.new('tom')] }
@@ -15,9 +15,11 @@ module ActiveFeed
     let(:sort) { Time.now }
 
     it 'should delegate certain methods' do
+      expect(users.is_a?(Array)).to be_truthy
       expect(collection.users).to eq(users)
-      expect(backend).to receive(:publish).with(users: users, event: 1, sort: sort)
-      collection.publish(event: 1, sort: sort)
+      expect(backend).to receive(:publish).with(users[0], 1, sort)
+      expect(backend).to receive(:publish).with(users[1], 1, sort)
+      collection.publish(1, sort)
     end
   end
 end

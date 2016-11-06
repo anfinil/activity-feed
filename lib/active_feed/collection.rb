@@ -1,10 +1,13 @@
 require 'forwardable'
 module ActiveFeed
+  # This class decorates the +Feed+ class with operations performed across
+  # multiple users. It then forwards it to the Feed class for each user.
   class Collection
     include Enumerable
 
     FORWARDED_WRITE_METHODS = %i(publish remove reset aggregate reset_last_read)
     FORWARDED_READ_METHODS  = %i(paginate all filter unread_count)
+    FORWARDED_METHODS = FORWARDED_READ_METHODS + FORWARDED_WRITE_METHODS
 
     attr_accessor :config
     attr_accessor :backend
@@ -16,24 +19,38 @@ module ActiveFeed
       self.backend = config.backend if config && config.respond_to?(:backend)
     end
 
-    def each
+    def each(&block)
+      users.each(&block) if users.is_a?(Array)
     end
 
-    def method_missing(name, args, &block)
-      super unless FORWARDED_READ_METHODS.include?(name) ||
-        FORWARDED_WRITE_METHODS.include?(name)
+    def method_missing(name, *args, &block)
+      super unless FORWARDED_METHODS.include?(name)
 
       self.class.send(:define_method, name) do |args|
-        backend.send(name, with_users(args), &block)
+        proxy_to_backend(name, *args, &block)
       end
-
-      self.send(name, args, &block) if self.respond_to?(name)
+      # Now that we've defined that method, lets freaking run it.
+      self.send(name, args, &block)
     end
 
-    private
-
-    def with_users(args)
-      args.merge!({ users: users })
+    # TODO: implement concurrency using Celluloid
+    def proxy_to_backend(name, *args, &block)
+      case users
+        when Array
+          users.each { |u| backend.send(name, u, *args, &block) }
+        when Proc
+          # Proc might yield either a single user, or multiple (ie. find_in_batches)
+          # We support both variants.
+          users.call do |users|
+            users.is_a?(Array) ?
+              users.each { |u| backend.send(name, u, *args, &block) } :
+              backend.send(name, users, *args, &block) # users is a single object
+          end
+        else
+          raise ObjectDoesNotImplementToAFError.new(users) unless users.respond_to?(:to_af)
+          backend.send(name, users, *args, &block)
+      end
     end
+
   end
 end

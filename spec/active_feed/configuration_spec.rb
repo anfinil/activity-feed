@@ -9,7 +9,7 @@ module ActiveFeed
       subject { multi_config }
       it('responds to :of') { is_expected.to respond_to(:of) }
       it('is a Hash') { is_expected.to be_kind_of(Hash) }
-      it('is a ConfigurationHash') { is_expected.to be_kind_of(ConfigurationHash) }
+      it('is a ConfigurationHash') { is_expected.to be_kind_of(SuperConfiguration) }
 
       context 'when defining a specific feed' do
         let(:feed_name) { :latest_stories }
@@ -36,7 +36,6 @@ module ActiveFeed
           subject { ActiveFeed.of(:follower_activity, :ar).namespace }
           it('should correctly set the namespace') { is_expected.to eq(:ar) }
         end
-
       end
 
       context 'various ways of accessing configuration' do
@@ -68,23 +67,33 @@ module ActiveFeed
           it('equals the defualt value') { is_expected.to eq(1000) }
         end
       end
-
-
     end
 
     context 'generating feed instances' do
       let(:user1) { double('Fred', to_af: 'fred') }
-      let(:user2) { double('Josh', to_af: 'josh' ) }
-      let(:feed) { ActiveFeed.of(:collection).for(user_list) }
+      let(:user2) { double('Josh', to_af: 'josh') }
+      let(:user_list) { [user1, user2] }
       context 'for multiple users' do
-        let(:user_list) { [user1, user2] }
-        it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::Collection)}
-        it('should return users array') { expect(feed.users).to eq(user_list)}
+        context 'a user array' do
+          let(:feed) { ActiveFeed.of(:collection).for(user_list) }
+          it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::Collection) }
+          it('should return users array') { expect(feed.users).to eq(user_list) }
+        end
+
+        context 'for a user proc' do
+          let(:user_proc) { Proc.new { user_list.each { |u| yield u if block_given? } } }
+          let(:feed) { ActiveFeed.of(:collection).for(user_proc) }
+          it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::Collection) }
+          it('should return users proc') { expect(feed.users).to eq(user_proc) }
+        end
+
       end
 
       context 'for a single user' do
+        let(:feed) { ActiveFeed.of(:collection).for(user_list) }
+
         let(:user_list) { user1 }
-        it('should return Feed') { expect(feed).to be_kind_of(ActiveFeed::Feed)}
+        it('should return Feed') { expect(feed).to be_kind_of(ActiveFeed::Feed) }
         it('should return user1') { expect(feed.user).to eq(user1) }
       end
     end
