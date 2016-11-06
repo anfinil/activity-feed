@@ -26,11 +26,11 @@ module ActiveFeed
     def method_missing(name, *args, &block)
       super unless FORWARDED_METHODS.include?(name)
 
-      self.class.send(:define_method, name) do |args|
+      self.class.send(:define_method, name) do |*args|
         proxy_to_backend(name, *args, &block)
       end
       # Now that we've defined that method, lets freaking run it.
-      self.send(name, args, &block)
+      self.send(name, *args, &block)
     end
 
     # TODO: implement concurrency using Celluloid
@@ -41,10 +41,11 @@ module ActiveFeed
         when Proc
           # Proc might yield either a single user, or multiple (ie. find_in_batches)
           # We support both variants.
-          users.call do |users|
-            users.is_a?(Array) ?
-              users.each { |u| backend.send(name, u, *args, &block) } :
-              backend.send(name, users, *args, &block) # users is a single object
+          while batch_of_users = users.call
+            break if batch_of_users.nil?
+            batch_of_users.is_a?(Array) ?
+              batch_of_users.each { |u| backend.send(name, u, *args, &block) } :
+              backend.send(name, batch_of_users, *args, &block) # users is a single object
           end
         else
           raise ObjectDoesNotImplementToAFError.new(users) unless users.respond_to?(:to_af)
