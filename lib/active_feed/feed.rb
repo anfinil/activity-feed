@@ -36,6 +36,10 @@ module ActiveFeed
       backend.unread_count(user)
     end
 
+    def count
+      backend.count(user)
+    end
+
     def reset_last_read!
       backend.reset_last_read!(user)
     end
