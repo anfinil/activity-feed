@@ -1,7 +1,7 @@
 ## ActiveFeed
 
 
-This is a ruby implementation of a fast activity feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based backend implementation is provided, with the API supporting new backends very easily.** 
+This is a ruby implementation of a fast activity feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based backend implementation is provided, with the API supporting new backends very easily. 
  
 _This project is sponsored by [Simbi, Inc.](https://simbi.com)_
 
@@ -26,13 +26,17 @@ _This project is sponsored by [Simbi, Inc.](https://simbi.com)_
 
 ### What's an Activity Feed?
 
-Here is a typical text-based activity feed that is so common today on social networks:
+Here is an example of a text-based activity feed that is very common today on social networking sites.
 
 [![Example](https://raw.githubusercontent.com/kigster/activefeed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
 
+The _stories_ in the feed depend entirely on the application using this library, therefore to integrate with ActiveFeed requires a few additional glue points in your code, mostly around serializing your objects to and from the feed. 
+
 ### Overview
 
-This is a "from-the-ground-up" written library that implements the concept of an activity feed, and hopes to address the following goals:
+This project has been developed from scratch.  
+ 
+ The feed library aims to address the following goals:
 
  * To define a minimalistic API for a typical event-based activity feed, without tying it to any concrete backend
  * To make it easy to implement and plug in a new type of backend, eg. using Couchbase or MongoDB 
@@ -51,9 +55,9 @@ First you need to configure the Feed with a valid backend implementation.
       
     ActiveFeed.configure do |config|
       config.of(:friends_news) do |friends_news|
-        friends_news.backend      = ActiveFeed::Redis::Backend.new(
+        friends_news.backend      = ActiveFeed::RedisBackend.new(
           redis: -> { ::Redis.new(host: '127.0.0.1') },
-        ),
+        )
         # how many items can be in the feed
         friends_news.max_size     = 1000
         friends_news.per_page     = 20       
