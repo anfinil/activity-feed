@@ -1,14 +1,10 @@
 require 'spec_helper'
 
 module ActiveFeed
-  module Backend
-    class FakeBackend < Base
-    end
-  end
-
   describe Collection do
+    include_examples :fake_backend
+
     User = Struct.new(:username, :to_af)
-    let(:backend) { ActiveFeed::Backend::FakeBackend.new }
     let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
     let(:collection) { Collection.new(users, configuration) }
     let(:sort) { Time.now }
@@ -25,9 +21,9 @@ module ActiveFeed
         expect(users.is_a?(Array)).to be_truthy
         expect(collection.users).to eq(users)
 
-        expect(backend).to receive(:publish).with(users[0], 1, sort)
-        expect(backend).to receive(:publish).with(users[1], 1, sort)
-        collection.publish(1, sort)
+        expect(backend).to receive(:publish!).with(users[0], 1, sort)
+        expect(backend).to receive(:publish!).with(users[1], 1, sort)
+        collection.publish!(1, sort)
       end
     end
 
@@ -41,10 +37,10 @@ module ActiveFeed
         expect(collection.users).to eq(users)
 
         TEST_USERS.reverse.each do |user|
-          expect(backend).to receive(:publish).with(user, 2, sort)
+          expect(backend).to receive(:publish!).with(user, 2, sort)
         end
 
-        collection.publish(2, sort)
+        collection.publish!(2, sort)
       end
     end
   end

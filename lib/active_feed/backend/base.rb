@@ -1,27 +1,27 @@
 module ActiveFeed
   module Backend
     class Base
-      def publish!(user, event, score)
+      def publish!
         raise AbstractMethodCalledWithoutAnOveride, self
       end
 
-      def remove!(event)
+      def remove!
         raise AbstractMethodCalledWithoutAnOveride, self
       end
 
-      def paginate(user, page, per_page)
+      def reset_last_read!
         raise AbstractMethodCalledWithoutAnOveride, self
       end
 
-      def unread_count(user)
+      def paginate
         raise AbstractMethodCalledWithoutAnOveride, self
       end
 
-      def reset_last_read!(user)
+      def unread_count
         raise AbstractMethodCalledWithoutAnOveride, self
       end
 
-      def count(user)
+      def count
         raise AbstractMethodCalledWithoutAnOveride, self
       end
     end

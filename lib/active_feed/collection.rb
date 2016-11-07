@@ -5,8 +5,8 @@ module ActiveFeed
   class Collection
     include Enumerable
 
-    FORWARDED_WRITE_METHODS = %i(publish remove reset aggregate reset_last_read)
-    FORWARDED_READ_METHODS  = %i(paginate all filter unread_count)
+    FORWARDED_WRITE_METHODS = %i(publish! remove! reset_last_read!)
+    FORWARDED_READ_METHODS  = %i(paginate unread_count count)
     FORWARDED_METHODS = FORWARDED_READ_METHODS + FORWARDED_WRITE_METHODS
 
     attr_accessor :config
