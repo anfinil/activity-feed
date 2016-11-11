@@ -1,6 +1,7 @@
 require 'hashie/mash'
 require 'singleton'
 require 'active_support/inflector'
+require 'active_feed/feed/configuration'
 
 module ActiveFeed
 
@@ -11,22 +12,38 @@ module ActiveFeed
 # is directed to the helpers +#of+ within the +ActiveFeed+ module itself,
 # or better yet — automatically generated constants.
 
-  class SuperConfiguration < ::Hash
+  class Config < ::Hash
     include Singleton
+
+    class << self
+      def configure
+        block_given? ? yield(instance) : instance
+      end
+
+      def clear!
+        instance.clear
+      end
+      
+      def feeds
+        instance.keys
+      end
+    end
 
     def of(key, *args)
       name       = key.to_sym
-      self[name] ||= Configuration.new(name, *args)
+      self[name] ||= Feed::Configuration.new(name, *args)
       define_feed_constant(name)
-      yield self[name] if block_given?
+      yield(self[name]) if block_given?
       self[name]
     end
+
+    alias_method :feed, :of
 
     private
 
     def define_feed_constant(name)
       class_name = name.to_s.camelize.to_sym
-      ActiveFeed.const_set(class_name, self[name]) unless ActiveFeed.const_defined?(class_name)
+      ActiveFeed.const_set(class_name, self.class.instance[name]) unless ActiveFeed.const_defined?(class_name)
     end
   end
 end

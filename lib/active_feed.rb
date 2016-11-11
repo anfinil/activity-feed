@@ -1,9 +1,9 @@
 require 'forwardable'
 
 require 'active_feed/version'
-require 'active_feed/configuration'
+
+require 'active_feed/config'
 require 'active_feed/feed'
-require 'active_feed/collection'
 require 'active_feed/backend'
 
 module ActiveFeed
@@ -31,7 +31,7 @@ module ActiveFeed
 
   class << self
     def configure(&block)
-      ActiveFeed::Configuration.send(:configure, &block)
+      ActiveFeed::Config.send(:configure, &block)
     end
 
     def of(name, *args, &block)
@@ -39,11 +39,11 @@ module ActiveFeed
     end
 
     def feed_names
-      ActiveFeed::Configuration.config.keys if ActiveFeed::Configuration.config
+      ActiveFeed::Config.feeds
     end
 
     def clear!
-      ActiveFeed::Configuration.clear!
+      ActiveFeed::Config.clear!
     end
   end
 end
