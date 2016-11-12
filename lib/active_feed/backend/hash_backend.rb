@@ -3,6 +3,8 @@ require 'active_feed/backend/base'
 module ActiveFeed
   module Backend
     # Single user's feed representation within the hash
+    UserEvent = Struct.new(:event, :score)
+    
     class UserFeed
       attr_accessor :user, :events, :last_read_at
       def initialize(user = nil)
@@ -10,10 +12,32 @@ module ActiveFeed
         self.user = user
       end
       
-      def push(event)
-        # TODO: serialize
-        events.unshift(event)
+      def push(event, score)
+        events.unshift(UserEvent.new(Marshal.dump(event), score))
         self
+      end
+      
+      def paginate(page, per_page)
+        events[(page - 1) * per_page, (page * per_page)]
+      end
+      
+      def read!
+        self.last_read_at = Time.now
+      end
+      
+      def delete(event)
+        events.reject!{ |h| h[:e] == event } 
+      end
+      
+      def count(&block)
+        block ? events.grep{ |event| block.call(event) }.size : events.size
+      end
+      
+      def count_unread
+        ue = self
+        ue.count do |e| 
+          e.score > ue.last_read_at
+        end
       end
     end
     
@@ -26,39 +50,37 @@ module ActiveFeed
         super(*args)
         self.h = {}
       end
-      
+          
       def publish!(user, event, score)
-        h[user] ||= UserFeed.new(user) 
-        h[user].push(event)
+        self[user].push(event, score)
       end
-
+      
       def remove!(user, event)
-        h[user].delete(event) if h[user].is_a?(Array)
+        self[user].delete(event)
       end
 
-      def reset_last_read!(*args)
-        raise AbstractMethodCalledWithoutAnOveride, self
+      def reset_last_read!(user)
+        self[user].read!
       end
 
       def paginate(user, page, per_page)
-        
+        self[user].paginate(page, per_page)
       end
 
-      def unread_count(*args)
-        raise AbstractMethodCalledWithoutAnOveride, self
+      def unread_count(user)
+        self[user].unread_count
       end
 
-      def count(*args)
-        raise AbstractMethodCalledWithoutAnOveride, self
+      def count(user)
+        self[user].count
       end
-
-      def push(user, event, score)
-        hash[user.to_af] ||= []
-        hash[user.to_af] << [event, score]
-
+      
+      private
+      
+      def [](user)
+        h[user.to_af] ||= UserFeed.new(user)
       end
-
-
+      
     end
   end
 end

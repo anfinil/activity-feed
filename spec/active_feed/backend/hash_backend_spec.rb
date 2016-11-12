@@ -21,6 +21,11 @@ module ActiveFeed
           feed.for(user_list)
         end
       end
+      
+      context 'publish' do
+        it 'should push the event to the list' do
+        end
+      end
     end
   end
 end
