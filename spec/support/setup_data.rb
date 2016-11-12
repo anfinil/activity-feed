@@ -12,7 +12,7 @@ module ActiveFeed
   class TestUser
     attr_accessor :id, :username
 
-    def initialize(id, username)
+    def initialize(id = nil, username = nil)
       self.id       = id
       self.username = username
     end
