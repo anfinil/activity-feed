@@ -2,15 +2,31 @@ module ActiveFeed
   module Backend
     class FakeBackend < Base
       ActiveFeed::Feed::Collection::FORWARDED_METHODS.each do |method|
-        self.send(:define_method, method) do |*args|
+        self.send(:define_method, method) do |*|
+          # noop
         end
       end
     end
   end
 
-  class TestUser < Struct.new(:username, :to_af)
-    USERNAMES = %i(kig tom pam).freeze
-    USERS     = USERNAMES.map { |username| self.new(username.to_s) }.freeze
+  class TestUser
+    attr_accessor :id, :username
+
+    def initialize(id, username)
+      self.id       = id
+      self.username = username
+    end
+
+    def self.define_users(usernames)
+      users = []
+      usernames.each_with_index do |username, index|
+        users << self.new(index + 1, username.to_s)
+      end
+      users
+    end
+
+    USER_NAMES = %i(kig tom pam).freeze
+    USERS = define_users(USER_NAMES).freeze
   end
 end
 

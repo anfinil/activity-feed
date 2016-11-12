@@ -3,7 +3,7 @@ require 'spec_helper'
 module ActiveFeed
   module Backend
     describe HashBackend do
-      include_examples :test_users
+      include_examples :users
       include_examples :hash_backend
 
       let(:feed) {

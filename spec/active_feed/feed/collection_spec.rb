@@ -3,8 +3,8 @@ require 'spec_helper'
 module ActiveFeed
   module Feed
     describe Collection do
-      include_examples :test_users
-      include_examples :test_backend
+      include_examples :users
+      include_examples :fake_backend
 
       let(:configuration) { ActiveFeed.of(:news_feed) { |c| c.backend = backend } }
       let(:collection) { Collection.new(users, configuration) }

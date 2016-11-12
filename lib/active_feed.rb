@@ -5,6 +5,7 @@ require 'active_feed/version'
 require 'active_feed/config'
 require 'active_feed/feed'
 require 'active_feed/backend'
+require 'active_feed/serializable'
 
 module ActiveFeed
 

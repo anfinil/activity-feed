@@ -1,12 +1,9 @@
 require 'active_feed/backend/base'
-require 'active_feed/serializer'
 
 module ActiveFeed
   module Backend
     # Single user's feed representation within the hash
     class UserFeed
-      include ActiveFeed::Serializer
-      
       attr_accessor :user, :events, :last_read_at
       def initialize(user = nil)
         self.events ||= []
@@ -14,7 +11,8 @@ module ActiveFeed
       end
       
       def push(event)
-        events.unshift(sz(event))
+        # TODO: serialize
+        events.unshift(event)
         self
       end
     end
@@ -22,8 +20,6 @@ module ActiveFeed
     # Reference implementation of the simplest possible backend using 
     # in-process hash.
     class HashBackend < Base
-      include ActiveFeed::Serializer
-      
       attr_accessor :h
 
       def initialize(*args)
@@ -32,12 +28,12 @@ module ActiveFeed
       end
       
       def publish!(user, event, score)
-        h[sz(user)] ||= UserFeed.new(user) 
-        h[sz(user)].push(event)
+        h[user] ||= UserFeed.new(user) 
+        h[user].push(event)
       end
 
       def remove!(user, event)
-        h[sz(user)].delete(sz(event)) if h[sz(user)].is_a?(Array)
+        h[user].delete(event) if h[user].is_a?(Array)
       end
 
       def reset_last_read!(*args)
