@@ -7,28 +7,28 @@ _This project is sponsored by [Simbi, Inc.](https://simbi.com)_
 
 > **WARNING: this project is under active development, and is not yet finished**
 
-[![Gem Version](https://badge.fury.io/rb/activityfeed.svg)](https://badge.fury.io/rb/activityfeed)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activityfeed/master/LICENSE.txt)
+[![Gem Version](https://badge.fury.io/rb/activity-feed.svg)](https://badge.fury.io/rb/activity-feed)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activity-feed/master/LICENSE.txt)
 
-[![Build Status](https://travis-ci.org/kigster/activityfeed.svg?branch=master)](https://travis-ci.org/kigster/activityfeed)
+[![Build Status](https://travis-ci.org/kigster/activity-feed.svg?branch=master)](https://travis-ci.org/kigster/activity-feed)
 [![Code Climate](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/gpa.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 [![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
 [![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 
 
-> **[Overview, Usage and Installation](https://github.com/kigster/activityfeed/blob/master/README.md)**
+> **[Overview, Usage and Installation](https://github.com/kigster/activity-feed/blob/master/README.md)**
 
-> [Design](https://github.com/kigster/activityfeed/blob/master/DESIGN.md)
+> [Design](https://github.com/kigster/activity-feed/blob/master/DESIGN.md)
 
-> [Serialization and De-Serialization](https://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activity-feed/blob/master/SERIALIZATION.md)
 
-> [Key Features](https://github.com/kigster/activityfeed/blob/master/FEATURES.md)
+> [Key Features](https://github.com/kigster/activity-feed/blob/master/FEATURES.md)
 
 ### What's an Activity Feed?
 
 Here is an example of a text-based activity feed that is very common today on social networking sites.
 
-[![Example](https://raw.githubusercontent.com/kigster/activityfeed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activityfeed/master/doc/active-feed-example.png)
+[![Example](https://raw.githubusercontent.com/kigster/activity-feed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activity-feed/master/doc/active-feed-example.png)
 
 The _stories_ in the feed depend entirely on the application using this library, therefore to integrate with ActivityFeed requires a few additional glue points in your code, mostly around serializing your objects to and from the feed.
 
@@ -50,7 +50,7 @@ First you need to configure the Feed with a valid backend implementation.
 #### Configuration
 
 ```ruby
-    require 'activityfeed'
+    require 'activity-feed'
     require 'redis'
       
     ActivityFeed.configure do |config|
@@ -74,7 +74,7 @@ But sometimes a single feed is not enough. What if we wanted to maintain two sep
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing – as events might have large audiences — we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
 ```ruby
-    require 'activityfeed'
+    require 'activity-feed'
     require 'redis'
     
     ActivityFeed.configure do |config|
@@ -118,7 +118,7 @@ Both syntaxes can be used interchangeably, just make sure you execute initializa
 When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
 ```ruby
-    require 'activityfeed'
+    require 'activity-feed'
     
     # First we define list of users (or "owners") of the activity feed to be
     # populated with the given event 
@@ -169,7 +169,7 @@ If you are not using Rails, you can still use any custom method that yields batc
 #### Reading the Feed Using `#paginate` and `#find_in_batches`
 
 ```ruby
-  require 'activityfeed'
+  require 'activity-feed'
 
   # You can also use just #reader method, instead of #create_reader
   @feed = ActivityFeed.create_or_replace(:news_feed).for(User.where(username: 'kig').first)
@@ -202,7 +202,7 @@ To actually render/display the feed to the user, we can _render_ each element (o
 Add this line to your application's Gemfile:
 
 ```ruby
-    gem 'activityfeed'
+    gem 'activity-feed'
 ```
 
 And then execute:
@@ -211,7 +211,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install activityfeed
+    $ gem install activity-feed
 
 
 ### Development
@@ -222,7 +222,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ### Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activityfeed
+Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activity-feed
 
 ### License
 
