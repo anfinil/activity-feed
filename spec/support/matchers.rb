@@ -2,7 +2,7 @@ require 'rspec/expectations'
 
 RSpec::Matchers.define :deserialize_as do |expected|
   match do |actual|
-    ActiveFeed::Serializable::Deserializer.klass_instance(actual).eql?(expected)
+    ActivityFeed::Serializable::Deserializer.klass_instance(actual).eql?(expected)
   end
 end
 

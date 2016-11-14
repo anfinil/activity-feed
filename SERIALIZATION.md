@@ -1,12 +1,12 @@
-# ActiveFeed — _Serialization & De-Serialization_ 
+# ActivityFeed — _Serialization & De-Serialization_
 
-> [Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)
+> [Overview, Usage and Installation](https://github.com/kigster/activityfeed/blob/master/README.md)
 
-> [Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)
+> [Design](https://github.com/kigster/activityfeed/blob/master/DESIGN.md)
 
-> **[Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)**
+> **[Serialization and De-Serialization](https://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md)**
 
-> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
+> [Key Features](https://github.com/kigster/activityfeed/blob/master/FEATURES.md)
 
 ### Events 
 

@@ -1,16 +1,16 @@
-# ActiveFeed — _Key Features_ 
+# ActivityFeed — _Key Features_
 
 
-> [Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)
+> [Overview, Usage and Installation](https://github.com/kigster/activityfeed/blob/master/README.md)
 
-> [Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)
+> [Design](https://github.com/kigster/activityfeed/blob/master/DESIGN.md)
 
-> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md)
 
-> **[Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)**
+> **[Key Features](https://github.com/kigster/activityfeed/blob/master/FEATURES.md)**
 
 
-The folhttps://github.com/kigster/activefeed/blob/master/SERIALIZATION.md of features that are lated for v1.0:
+The folhttps://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md of features that are lated for v1.0:
 
 1. **Updating the activity feed** is generally done for a set of users. Typical example being an event distributed to all followers of the person generating the event (ie. "actor"). Here we support:
 
@@ -28,6 +28,6 @@ The folhttps://github.com/kigster/activefeed/blob/master/SERIALIZATION.md of fea
 3. **Scaling the feed** is done by focusing on high performance in the feed design. and data sharding across many instances, to allow parallel independent queries for concurrent users:
 
     * _Constant time, fast read operations_ on the news feed due to it's pre-computed design, and hash-based storage
-    * _Ability to shard_ data across many servers, and many instances of Redis, by leveraging one or more [`twemproxies`](https://github.com/twitter/twemproxy). Twemproxy can be used to configure sharding, and using sharding **ActiveFeed** can be used to support massive data sets across any number of servers
+    * _Ability to shard_ data across many servers, and many instances of Redis, by leveraging one or more [`twemproxies`](https://github.com/twitter/twemproxy). Twemproxy can be used to configure sharding, and using sharding **ActivityFeed** can be used to support massive data sets across any number of servers
 
 It is my hope to keep this gem small and very targeted to solving a specific problem, which is **to define a basic activity feed API for reading and writing from/to a backend which can be swapped out with another implementation, and to offer a reference implementation using Redis, as well as the direction for scaling the feed.**

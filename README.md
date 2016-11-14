@@ -1,4 +1,4 @@
-## ActiveFeed
+## ActivityFeed
 
 
 This is a ruby implementation of a fast activity feed commonly used in a typical social network-like applications. The implementation is optimized for **read-time performance** and high concurrency (lots of users). A default Redis-based backend implementation is provided, with the API supporting new backends very easily. 
@@ -7,30 +7,30 @@ _This project is sponsored by [Simbi, Inc.](https://simbi.com)_
 
 > **WARNING: this project is under active development, and is not yet finished**
 
-[![Gem Version](https://badge.fury.io/rb/activefeed.svg)](https://badge.fury.io/rb/activefeed)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activefeed/master/LICENSE.txt)
+[![Gem Version](https://badge.fury.io/rb/activityfeed.svg)](https://badge.fury.io/rb/activityfeed)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kigster/activityfeed/master/LICENSE.txt)
 
-[![Build Status](https://travis-ci.org/kigster/activefeed.svg?branch=master)](https://travis-ci.org/kigster/activefeed)
+[![Build Status](https://travis-ci.org/kigster/activityfeed.svg?branch=master)](https://travis-ci.org/kigster/activityfeed)
 [![Code Climate](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/gpa.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 [![Test Coverage](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/coverage.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/coverage)
 [![Issue Count](https://codeclimate.com/repos/5813da0398926c0088000285/badges/5e15f53bfbcd4c68cdaa/issue_count.svg)](https://codeclimate.com/repos/5813da0398926c0088000285/feed)
 
 
-> **[Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)**
+> **[Overview, Usage and Installation](https://github.com/kigster/activityfeed/blob/master/README.md)**
 
-> [Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)
+> [Design](https://github.com/kigster/activityfeed/blob/master/DESIGN.md)
 
-> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md)
 
-> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
+> [Key Features](https://github.com/kigster/activityfeed/blob/master/FEATURES.md)
 
 ### What's an Activity Feed?
 
 Here is an example of a text-based activity feed that is very common today on social networking sites.
 
-[![Example](https://raw.githubusercontent.com/kigster/activefeed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-example.png)
+[![Example](https://raw.githubusercontent.com/kigster/activityfeed/master/uml/active-feed-example.png)](https://raw.githubusercontent.com/kigster/activityfeed/master/doc/active-feed-example.png)
 
-The _stories_ in the feed depend entirely on the application using this library, therefore to integrate with ActiveFeed requires a few additional glue points in your code, mostly around serializing your objects to and from the feed. 
+The _stories_ in the feed depend entirely on the application using this library, therefore to integrate with ActivityFeed requires a few additional glue points in your code, mostly around serializing your objects to and from the feed.
 
 ### Overview
 
@@ -50,12 +50,12 @@ First you need to configure the Feed with a valid backend implementation.
 #### Configuration
 
 ```ruby
-    require 'activefeed'
+    require 'activityfeed'
     require 'redis'
       
-    ActiveFeed.configure do |config|
-      config.of(:friends_news) do |friends_news|
-        friends_news.backend      = ActiveFeed::RedisBackend.new(
+    ActivityFeed.configure do |config|
+      config.create_or_replace(:friends_news) do |friends_news|
+        friends_news.backend      = ActivityFeed::RedisBackend.new(
           redis: -> { ::Redis.new(host: '127.0.0.1') },
         )
         # how many items can be in the feed
@@ -65,7 +65,7 @@ First you need to configure the Feed with a valid backend implementation.
     end
 ```
 
-Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActiveFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
+Above we've configured the Redis client, passed the proc that creates new Redis clients into the Redis Backend for `ActivityFeed`. We've also limited the max size of the feed to a 1000 items – which are typically 1000 most recent events.
 
 ##### Multiple Independent Activity Feeds
 
@@ -74,14 +74,14 @@ But sometimes a single feed is not enough. What if we wanted to maintain two sep
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing – as events might have large audiences — we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
 ```ruby
-    require 'activefeed'
+    require 'activityfeed'
     require 'redis'
     
-    ActiveFeed.configure do |config|
+    ActivityFeed.configure do |config|
     
       # This is the feed of news articles based on user subscription preferences.
-      config.of(:friends_news) do |friends_news| 
-        friends_news.backend = ActiveFeed::Redis::Backend.new(
+      config.create_or_replace(:friends_news) do |friends_news|
+        friends_news.backend = ActivityFeed::Redis::Backend.new(
           redis: ::Redis.new(host: '127.0.0.1')
         )
         friends_news.per_page = 20
@@ -90,7 +90,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
       # This is the feed of events associated with the followers.
       # We use ConnectionPool because we anticipate higher load.
       config.of(:followers) do |followers_feed| 
-        followers_feed.backend = ActiveFeed::Redis::Backend.new(
+        followers_feed.backend = ActivityFeed::Redis::Backend.new(
           redis: ConnectionPool.new(size: 5, timeout: 5) { 
             ::Redis.new(host: '192.168.10.10', port: 9000) 
         })
@@ -104,12 +104,12 @@ So how do you access the feed from your code? Please check the UML diagram above
 
 When we called `ActivityFeed.of(:friends_news)` for the very first time, the library has created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
 
-In addition, the gem also created a constant under the `ActiveFeed` namespace. For example, given a name such as `:friends_news` the constant defined as `ActiveFeed::FriendsNews`. 
+In addition, the gem also created a constant under the `ActivityFeed` namespace. For example, given a name such as `:friends_news` the constant defined as `ActivityFeed::FriendsNews`.
 
 Both syntaxes can be used interchangeably, just make sure you execute initialization of the configuration before you reference the constant.
  
 ```ruby
-   ActivityFeed::FriendsNews === ActivityFeed.of(:friends_news) 
+   ActivityFeed::FriendsNews === ActivityFeed.create_or_replace(:friends_news)
    # => true
 ```
 
@@ -118,7 +118,7 @@ Both syntaxes can be used interchangeably, just make sure you execute initializa
 When we publish events to the feeds, we typically (although not always) do it for many feeds at the same time. This is why the write operations expect a list of users, or an enumeration, or a block yielding batches of the users:
 
 ```ruby
-    require 'activefeed'
+    require 'activityfeed'
     
     # First we define list of users (or "owners") of the activity feed to be
     # populated with the given event 
@@ -126,7 +126,7 @@ When we publish events to the feeds, we typically (although not always) do it fo
     
     # Next, we instantiate the feed by passing the list of users,
     # and then we publish the event across all of the corresponding feeds.
-    @feed = ActiveFeed::FriendsNews.for(users)
+    @feed = ActivityFeed::FriendsNews.for(users)
     # And then we publish the event to each feed:
     @feed.publish(sort: Time.now, event: event)
 ```
@@ -135,17 +135,17 @@ Instead of passing the list of user IDs, you can pass an `ActiveRecord::Relation
 or a block — which should yield the next element in the array when called,
 or nil when exhausted.
 
-For any object types besides Integer, ActiveFeed will call a method
+For any object types besides Integer, ActivityFeed will call a method
 `#to_af` on the object, in order to receive a string representation of
 that object.
 
 ```ruby
     # This is just an example of how you could return AREL statement
     # which can then be fetched in groups (pages) of users and split into
-    # several parallel jobs by ActiveFeed.
+    # several parallel jobs by ActivityFeed.
     
     @follower = User.where(follower: @event.actor)
-    @feed = ActiveFeed.of(:followers_feed).for(@follower)
+    @feed = ActivityFeed.create_or_replace(:followers_feed).for(@follower)
     @feed.publish(event: @event, sort: Time.now) # publish the event sorted by time.
 ```
 
@@ -156,7 +156,7 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-    @feed = ActiveFeed.of(:news_feed).for do
+    @feed = ActivityFeed.create_or_replace(:news_feed).for do
       User.where(followee: @event.actor)
           .find_in_batches(batch_size: 1000) { |users| yield(users) }
     end
@@ -169,10 +169,10 @@ If you are not using Rails, you can still use any custom method that yields batc
 #### Reading the Feed Using `#paginate` and `#find_in_batches`
 
 ```ruby
-  require 'activefeed'
+  require 'activityfeed'
 
   # You can also use just #reader method, instead of #create_reader
-  @feed = ActiveFeed.of(:news_feed).for(User.where(username: 'kig').first)  
+  @feed = ActivityFeed.create_or_replace(:news_feed).for(User.where(username: 'kig').first)
   @feed.paginate(page: 1, per_page: 20)  
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
 ```
@@ -202,7 +202,7 @@ To actually render/display the feed to the user, we can _render_ each element (o
 Add this line to your application's Gemfile:
 
 ```ruby
-    gem 'activefeed'
+    gem 'activityfeed'
 ```
 
 And then execute:
@@ -211,7 +211,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install activefeed
+    $ gem install activityfeed
 
 
 ### Development
@@ -222,7 +222,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ### Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activefeed
+Bug reports and pull requests are welcome on GitHub at https://github.com/kigster/activityfeed
 
 ### License
 

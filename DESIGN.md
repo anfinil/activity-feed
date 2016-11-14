@@ -1,13 +1,13 @@
-# ActiveFeed — _Design_ 
+# ActivityFeed — _Design_
 
 
-> [Overview, Usage and Installation](https://github.com/kigster/activefeed/blob/master/README.md)
+> [Overview, Usage and Installation](https://github.com/kigster/activityfeed/blob/master/README.md)
 
-> **[Design](https://github.com/kigster/activefeed/blob/master/DESIGN.md)**
+> **[Design](https://github.com/kigster/activityfeed/blob/master/DESIGN.md)**
 
-> [Serialization and De-Serialization](https://github.com/kigster/activefeed/blob/master/SERIALIZATION.md)
+> [Serialization and De-Serialization](https://github.com/kigster/activityfeed/blob/master/SERIALIZATION.md)
 
-> [Key Features](https://github.com/kigster/activefeed/blob/master/FEATURES.md)
+> [Key Features](https://github.com/kigster/activityfeed/blob/master/FEATURES.md)
 
 
 ### How a Feed Works
@@ -27,7 +27,7 @@ Because of some of the above reasons, this feed works best in combination with a
 
 Below is the high-level UML diagram that shows how the internals of the active feed work:
 
-[![UML](https://raw.githubusercontent.com/kigster/activefeed/master/uml/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activefeed/master/doc/active-feed-uml.png)
+[![UML](https://raw.githubusercontent.com/kigster/activityfeed/master/uml/active-feed-uml.png)](https://raw.githubusercontent.com/kigster/activityfeed/master/doc/active-feed-uml.png)
 
 ### Write-Time versus Read-Time Feeds
 
