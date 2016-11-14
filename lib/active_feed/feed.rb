@@ -4,6 +4,9 @@ module ActiveFeed
   end
 end
 
+
+require 'active_feed/user/events'
+require 'active_feed/user/proxy'
+require 'active_feed/user/collection'
+
 require 'active_feed/feed/configuration'
-require 'active_feed/feed/user'
-require 'active_feed/feed/collection'

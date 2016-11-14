@@ -1,6 +1,6 @@
 module ActiveFeed
-  module Feed
-    class User
+  module User
+    class Proxy
       extend Forwardable
       def_delegators :@config, :backend
 

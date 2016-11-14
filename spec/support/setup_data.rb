@@ -1,7 +1,7 @@
 module ActiveFeed
   module Backend
     class FakeBackend < Base
-      ActiveFeed::Feed::Collection::FORWARDED_METHODS.each do |method|
+      ActiveFeed::User::Collection::FORWARDED_METHODS.each do |method|
         self.send(:define_method, method) do |*|
           # noop
         end

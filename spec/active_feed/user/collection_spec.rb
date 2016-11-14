@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module ActiveFeed
-  module Feed
+  module User
     describe Collection do
       include_examples :users
       include_examples :fake_backend

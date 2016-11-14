@@ -78,14 +78,14 @@ module ActiveFeed
           
           context 'a user array' do
             let(:feed) { ActiveFeed.of(:sample_feed).for(user_list) }
-            it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::Feed::Collection) }
+            it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::User::Collection) }
             it('should return users array') { expect(feed.users).to eq(user_list) }
           end
 
           context 'for a user proc' do
             let(:user_proc) { Proc.new { user_list.each { |u| yield u if block_given? } } }
             let(:feed) { ActiveFeed.of(:sample_feed).for(user_proc) }
-            it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::Feed::Collection) }
+            it('should return Collection') { expect(feed).to be_kind_of(ActiveFeed::User::Collection) }
             it('should return users proc') { expect(feed.users).to eq(user_proc) }
           end
 
@@ -94,7 +94,7 @@ module ActiveFeed
         context 'for a single user' do
           let(:feed) { ActiveFeed.of(:sample_feed).for(user1) }
 
-          it('should return Feed') { expect(feed).to be_kind_of(ActiveFeed::Feed::User) }
+          it('should return Feed') { expect(feed).to be_kind_of(ActiveFeed::User::Proxy) }
           it('should return user1') { expect(feed.user).to eq(user1) }
         end
       end

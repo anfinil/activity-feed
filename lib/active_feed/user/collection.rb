@@ -1,6 +1,6 @@
 require 'forwardable'
 module ActiveFeed
-  module Feed
+  module User
     # This class decorates the +Feed+ class with operations performed across
     # multiple users. It then forwards it to the Feed class for each user.
     class Collection

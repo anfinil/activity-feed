@@ -36,8 +36,8 @@ module ActiveFeed
 
       def for(users)
         (COLLECTION_TYPES.any? { |t| users.is_a?(t) }) ?
-          ActiveFeed::Feed::Collection.new(users, self) :
-          ActiveFeed::Feed::User.new(users, self)
+          ActiveFeed::User::Collection.new(users, self) :
+          ActiveFeed::User::Proxy.new(users, self)
       end
 
     end
