@@ -24,10 +24,13 @@ module ActivityFeed
 
           it('responds to :backend') { is_expected.to respond_to(:backend) }
           it('has its name correctly set') { expect(subject.name).to eql(feed_name) }
-
-          context 'auto-creates constants' do
+          context 'auto-creates constants and methods' do
             it('define the constant') do
               expect(ActivityFeed.const_defined?(:LatestStories)).to eq(true)
+            end
+            it('defines the method') do
+              expect(subject.name).to eq(:latest_stories)
+              expect(ActivityFeed.latest_stories).to eq(ActivityFeed.feed(:latest_stories))
             end
           end
           
@@ -68,6 +71,8 @@ module ActivityFeed
       end
 
       context 'generating feed instances' do
+        include_context :fake_backend_context
+        
         let(:user1) { double('Fred', to_af: 'fred') }
         let(:user2) { double('Josh', to_af: 'josh') }
         let(:user_list) { [user1, user2] }

@@ -21,12 +21,12 @@ module ActivityFeed
       self.configure.create(name, *args, &block)
     end
 
-    alias_method :of, :create 
-    
+    alias_method :of, :create
+
     def find_or_create(name, *args, &block)
       self.configure.find_or_create(name, *args, &block)
     end
-    
+
     def feed(name)
       ActivityFeed::Config[name.to_sym]
     end
@@ -38,11 +38,11 @@ module ActivityFeed
     def clear!
       ActivityFeed::Config.clear!
     end
-    
+
     def register(feed_name)
-      self.instance_eval do 
-        define_method(feed_name) { self.configure[feed_name] }
-      end
+      method_body = %Q{def self.#{feed_name}; self.feed(:#{feed_name}); end }
+      ActivityFeed.module_eval method_body
     end
+    
   end
 end

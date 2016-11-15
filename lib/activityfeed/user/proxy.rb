@@ -8,14 +8,14 @@ module ActivityFeed
       # to +#to_af+, or a proc that yields a batch of users
       def initialize(user, config)
         self.user = user
-        raise ObjectDoesNotImplementToAFError.new(user) unless serializable?(user)
+        raise InstanceMustBeSerializableError.new(user) unless serializable?(user)
         self.config  = config
         raise ArgumentError, "No backend defined in config #{config}" unless config.backend
         self.backend = config.backend
       end
 
       def publish!(event, sort)
-        raise ObjectDoesNotImplementToAFError.new(event) unless serializable?(event)
+        raise InstanceMustBeSerializableError.new(event) unless serializable?(event)
         backend.publish!(user, event, sort)
       end
 
@@ -29,11 +29,11 @@ module ActivityFeed
       end
 
       def read?
-        unread_count == 0
+        count_unread == 0
       end
 
-      def unread_count
-        backend.unread_count(user)
+      def count_unread
+        backend.count_unread(user)
       end
 
       def count

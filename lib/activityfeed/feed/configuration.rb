@@ -33,6 +33,11 @@ module ActivityFeed
         yield self if block_given?
         self
       end
+      
+      def configure
+        yield self if block_given?
+        self
+      end
 
       def for(users)
         (COLLECTION_TYPES.any? { |t| users.is_a?(t) }) ?

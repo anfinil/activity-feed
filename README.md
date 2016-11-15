@@ -53,15 +53,13 @@ First you need to configure the Feed with a valid backend implementation.
     require 'activity-feed'
     require 'redis'
       
-    ActivityFeed.configure do |config|
-      config.find_or_create(:friends_news) do |friends_news|
-        friends_news.backend      = ActivityFeed::RedisBackend.new(
-          redis: -> { ::Redis.new(host: '127.0.0.1') },
-        )
-        # how many items can be in the feed
-        friends_news.max_size     = 1000
-        friends_news.per_page     = 20       
-      end
+    ActivityFeed.find_or_create(:friends_news) do |config|
+      config.backend      = ActivityFeed::Backend::RedisBackend.new(
+        config: config,
+        redis: -> { ::Redis.new(host: '127.0.0.1') },
+      )
+      config.max_size     = 1000 # how many items can be in the feed
+      config.per_page     = 20   # default page size
     end
 ```
 
@@ -74,44 +72,44 @@ But sometimes a single feed is not enough. What if we wanted to maintain two sep
 We can create an additional activity feed, say for followers, and call it `:followers` at the same time, and configure it with a slightly different backend. Because we expect this activity feed to be more taxing – as events might have large audiences — we'll wrap it in the `ConnectionPool` that will create several connections that can be used concurrently:
 
 ```ruby
-    require 'activity-feed'
-    require 'redis'
+  require 'activity-feed'
+  require 'redis'
     
-    ActivityFeed.configure do |config|
-    
-      # This is the feed of news articles based on user subscription preferences.
-      config.find_or_create(:friends_news) do |friends_news|
-        friends_news.backend = ActivityFeed::Redis::Backend.new(
-          redis: ::Redis.new(host: '127.0.0.1')
-        )
-        friends_news.per_page = 20
-      end    
-    
-      # This is the feed of events associated with the followers.
-      # We use ConnectionPool because we anticipate higher load.
-      config.of(:followers) do |followers_feed| 
-        followers_feed.backend = ActivityFeed::Redis::Backend.new(
-          redis: ConnectionPool.new(size: 5, timeout: 5) { 
-            ::Redis.new(host: '192.168.10.10', port: 9000) 
-        })
-      end
-    end
+  # This is the feed of news articles based on user
+  # subscription preferences, use a local hash implementation
+  ActivityFeed.find_or_create(:friends_news) do |config|
+    config.backend = ActivityFeed::Backend::HashBackend.new(
+      config: config
+    )
+    config.per_page = 20
+  end
+
+  # This is the feed of events associated with the followers.
+  # We use ConnectionPool because we anticipate higher load.
+  ActivityFeed.find_or_create(:followers) do |config|
+    config.backend = ActivityFeed::Backend::RedisBackend.new(
+      config: config,
+      redis: ::ConnectionPool.new(size: 5, timeout: 5) do
+                ::Redis.new(host: '192.168.10.10', port: 9000)
+              end
+    )
+    config.per_page = 50
+  end
 ```
 
 ##### Referencing Multiple Feeds
 
 So how do you access the feed from your code? Please check the UML diagram above to see how objects are returned.
 
-When we called `ActivityFeed.of(:friends_news)` for the very first time, the library has created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
+When we called `ActivityFeed.find_or_create(:friends_news)` for the very first time, the library created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
 
-In addition, the gem also created a constant under the `ActivityFeed` namespace. For example, given a name such as `:friends_news` the constant defined as `ActivityFeed::FriendsNews`.
+In addition, the gem also created a constant and a method under the `ActivityFeed` namespace. For example, given a name such as `:friends_news` the following are all valid ways of accessing the feed:
 
-Both syntaxes can be used interchangeably, just make sure you execute initialization of the configuration before you reference the constant.
- 
-```ruby
-   ActivityFeed::FriendsNews === ActivityFeed.find_or_create(:friends_news)
-   # => true
-```
+ * `ActivityFeed::FriendsNews`
+ * `ActivityFeed.friends_news`
+ * `ActivityFeed.feed(:friends_news)`
+
+You can also get a full list of currently defined feeds with `ActivityFeed.feed_names` method.
 
 #### Publishing Data to the Feed
 
@@ -122,11 +120,11 @@ When we publish events to the feeds, we typically (although not always) do it fo
     
     # First we define list of users (or "owners") of the activity feed to be
     # populated with the given event 
-    users = [1, 4, 545, 234234]
+    users = [User.find(1), User.find(2), User.find(3) ]
     
     # Next, we instantiate the feed by passing the list of users,
     # and then we publish the event across all of the corresponding feeds.
-    @feed = ActivityFeed::FriendsNews.for(users)
+    @feed = ActivityFeed.friends_news.for(users)
     # And then we publish the event to each feed:
     @feed.publish(sort: Time.now, event: event)
 ```

@@ -27,30 +27,36 @@ module ActivityFeed
       def method_missing(name, *args, &block)
         super unless FORWARDED_METHODS.include?(name)
 
-        self.class.send(:define_method, name) do |*args|
-          proxy_to_backend(name, *args, &block)
-        end
+        # self.class.send(:define_method, name) do |*args|
+        proxy_to_backend(name, *args, &block)
+        # end
         # Now that we've defined that method, lets freaking run it.
-        self.send(name, *args, &block)
+        # self.send(name, *args, &block)
       end
 
       # TODO: implement concurrency using Celluloid
       def proxy_to_backend(name, *args, &block)
         case users
-          when Array
-            users.each { |u| backend.send(name, u, *args, &block) }
+          when Array # could be a flat array, or a two-dimensional array
+            users.each { |batch| proxy_batch_to_backend(args, batch, block, name)  }
           when Proc
             # Proc might yield either a single user, or multiple (ie. find_in_batches)
             # We support both variants.
-            while batch_of_users = users.call
-              break if batch_of_users.nil?
-              batch_of_users.is_a?(Array) ?
-                batch_of_users.each { |u| backend.send(name, u, *args, &block) } :
-                backend.send(name, batch_of_users, *args, &block) # users is a single object
+            while batch = users.call
+              break if batch.nil?
+              proxy_batch_to_backend(args, batch, block, name)
             end
           else
-            raise ObjectDoesNotImplementToAFError.new(users) unless users.respond_to?(:to_af)
+            raise InstanceMustBeSerializableError.new(users) unless users.respond_to?(:to_af)
             backend.send(name, users, *args, &block)
+        end
+      end
+
+      def proxy_batch_to_backend(args, batch, block, name)
+        if batch.is_a?(Array)
+          batch.each { |u| backend.send(name, u, *args, &block) }
+        else
+          backend.send(name, batch, *args, &block)
         end
       end
 

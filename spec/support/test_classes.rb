@@ -1,9 +1,11 @@
 module ActivityFeed
   module Backend
-    class FakeBackend < Base
+    srand(1098010932048023984029)
+    class FakeBackend
+      include Backend
       ActivityFeed::User::Collection::FORWARDED_METHODS.each do |method|
-        self.send(:define_method, method) do |*|
-          # noop
+        self.send(:define_method, method) do |*args|
+          puts "#{self.inspect}: method: #{method} args: #{args}"
         end
       end
     end
@@ -19,18 +21,13 @@ module ActivityFeed
       self.username = username
     end
 
-    def self.define_users(usernames)
-      users = []
-      usernames.each_with_index do |username, index|
-        users << self.new(index + 1, username.to_s)
+    def self.define_users(user_names)
+      user_names.map do |user_name|
+        self.new(rand(2**32), user_name.to_s)
       end
-      users
     end
 
     USER_NAMES = %i(kig tom pam).freeze
     USERS = define_users(USER_NAMES).freeze
   end
 end
-
-
-

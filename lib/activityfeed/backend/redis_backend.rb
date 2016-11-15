@@ -1,7 +1,7 @@
-require 'activityfeed/backend/base'
 module ActivityFeed
   module Backend
-    class RedisBackend < Base
+    class RedisBackend
+      include Backend
     end
   end
 end

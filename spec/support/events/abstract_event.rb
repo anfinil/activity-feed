@@ -17,20 +17,21 @@ module MyApp
           include ActivityFeed::Serializable
           class << self
             attr_accessor :activity_feeds
+
             def publishes_to(*feeds)
               self.activity_feeds ||= []
               self.activity_feeds << feeds if feeds
               self.activity_feeds.flatten!
             end
           end
-          
+
           self.publishes_to []
         end
         klass.class_eval do
           def fire!
             super
             self.class.activity_feeds.each do |feed|
-              ActivityFeed.find_or_create(feed).for(actor).publish!(self, self.created)
+              ActivityFeed.feed(feed).for(owner).publish!(self, self.created)
             end
           end
         end
@@ -38,10 +39,17 @@ module MyApp
 
       attr_accessor :actor, :target, :owner, :created
 
-      def initialize(actor:, target:)
+      def initialize(actor:, target:, owner: nil)
         self.actor   = actor
         self.target  = target
-        self.created = Time.now
+        self.owner   = owner
+        
+        unless self.owner
+          self.owner = target.user if target.respond_to?(:user) 
+          self.owner = target if target.class.name =~ /user$/i
+        end
+        
+        self.created = Time.now.to_f
       end
     end
   end

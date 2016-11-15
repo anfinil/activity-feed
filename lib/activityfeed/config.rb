@@ -27,7 +27,7 @@ module ActivityFeed
       def feeds
         instance.keys
       end
-      
+
       def [](value)
         instance[value]
       end
@@ -46,16 +46,19 @@ module ActivityFeed
 
     def __feed(key, find_or_create, *args, &block)
       name = key.to_sym
-      
-      return self[name] if find_or_create && self[name]
-        
-      raise ArgumentError, "Feed named #{name} already exists!" if self[name]
 
-      self[name] = Feed::Configuration.new(name, *args)
-      define_feed_constant(name)
-      define_method_accessor(name)
-      yield(self[name]) if block_given?
-      
+      if self[name] && find_or_create
+        block.call(self[name]) if block
+
+      elsif self[name]
+        raise ArgumentError, "Feed named #{name} already exists!"
+
+      else
+        self[name] = Feed::Configuration.new(name, *args, &block)
+        define_feed_constant(name)
+        define_method_accessor(name)
+      end
+
       self[name]
     end
 
@@ -65,8 +68,9 @@ module ActivityFeed
     end
 
     def define_method_accessor(name)
-      raise ArgumentError, "Feed name #{name} conflicts with an internal method" if ActivityFeed.respond_to?(name)
-      ActivityFeed.register(name)
+      unless ActivityFeed.respond_to?(name)
+        ActivityFeed.register(name)
+      end
     end
   end
 end

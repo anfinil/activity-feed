@@ -10,13 +10,13 @@ module ActivityFeed
     end
   end
 
-  class ObjectDoesNotImplementToAFError < ActivityFeed::Error
+  class InstanceMustBeSerializableError < ActivityFeed::Error
     def problem
       'object must implement #to_af instance method'
     end
   end
 
-  class AbstractMethodCalledWithoutAnOveride < ActivityFeed::Error
+  class AbstractMethodCalledError < ActivityFeed::Error
     def problem
       'subclasses must be implementing these methods; you called an abstract top-level method.'
     end

@@ -10,7 +10,7 @@ module ActivityFeed
   end
 
   RSpec.describe Serializable do
-    include_examples :users
+    include_context :users_context
 
     before do
       class SerializableUser < TestUser
@@ -63,7 +63,7 @@ module ActivityFeed
     end
     
     context 'serializing events' do
-      include_examples :events
+      include_context :events_context
     end
   end
 end
