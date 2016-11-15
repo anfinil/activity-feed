@@ -37,20 +37,25 @@ module ActivityFeed
       __feed(key, false, *args, &block)
     end
 
-    def create_or_replace(key, *args, &block)
+    def find_or_create(key, *args, &block)
       __feed(key, true, *args, &block)
     end
 
 
     private
 
-    def __feed(key, overwrite, *args, &block)
+    def __feed(key, find_or_create, *args, &block)
       name = key.to_sym
-      raise ArgumentError, "Feed named #{name} already exists!" if self[name] && !overwrite
+      
+      return self[name] if find_or_create && self[name]
+        
+      raise ArgumentError, "Feed named #{name} already exists!" if self[name]
+
       self[name] = Feed::Configuration.new(name, *args)
       define_feed_constant(name)
       define_method_accessor(name)
       yield(self[name]) if block_given?
+      
       self[name]
     end
 

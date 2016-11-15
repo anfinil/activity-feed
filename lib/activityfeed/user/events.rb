@@ -1,5 +1,5 @@
 module ActivityFeed
-  module Feed
+  module User
     class Events
       attr_accessor :user, :events, :last_read_at
 
@@ -9,7 +9,7 @@ module ActivityFeed
       end
 
       def push(event, score)
-        events.unshift(UserEvent.new(Marshal.dump(event), score))
+        events.unshift(event, score)
         self
       end
 

@@ -61,5 +61,9 @@ module ActivityFeed
         it { is_expected.to deserialize_as(SerializableUser.new('kigster')) }  
       end
     end
+    
+    context 'serializing events' do
+      include_examples :events
+    end
   end
 end

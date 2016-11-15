@@ -6,7 +6,7 @@ module ActivityFeed
       include_examples :users
       include_examples :fake_backend
 
-      let(:configuration) { ActivityFeed.create_or_replace(:news_feed) { |c| c.backend = backend } }
+      let(:configuration) { ActivityFeed.find_or_create(:news_feed) { |c| c.backend = backend } }
       let(:collection) { Collection.new(users, configuration) }
       let(:sort) { Time.now }
 

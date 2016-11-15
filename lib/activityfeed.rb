@@ -23,8 +23,8 @@ module ActivityFeed
 
     alias_method :of, :create 
     
-    def create_or_replace(name, *args, &block)
-      self.configure.create_or_replace(name, *args, &block)
+    def find_or_create(name, *args, &block)
+      self.configure.find_or_create(name, *args, &block)
     end
     
     def feed(name)

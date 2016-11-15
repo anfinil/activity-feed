@@ -1,8 +1,6 @@
 module ActivityFeed
   module User
     class Proxy
-      extend Forwardable
-      def_delegators :@config, :backend
 
       attr_accessor :user, :config, :backend
 
@@ -12,6 +10,7 @@ module ActivityFeed
         self.user = user
         raise ObjectDoesNotImplementToAFError.new(user) unless serializable?(user)
         self.config  = config
+        raise ArgumentError, "No backend defined in config #{config}" unless config.backend
         self.backend = config.backend
       end
 

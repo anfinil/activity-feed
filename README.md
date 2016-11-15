@@ -54,7 +54,7 @@ First you need to configure the Feed with a valid backend implementation.
     require 'redis'
       
     ActivityFeed.configure do |config|
-      config.create_or_replace(:friends_news) do |friends_news|
+      config.find_or_create(:friends_news) do |friends_news|
         friends_news.backend      = ActivityFeed::RedisBackend.new(
           redis: -> { ::Redis.new(host: '127.0.0.1') },
         )
@@ -80,7 +80,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
     ActivityFeed.configure do |config|
     
       # This is the feed of news articles based on user subscription preferences.
-      config.create_or_replace(:friends_news) do |friends_news|
+      config.find_or_create(:friends_news) do |friends_news|
         friends_news.backend = ActivityFeed::Redis::Backend.new(
           redis: ::Redis.new(host: '127.0.0.1')
         )
@@ -109,7 +109,7 @@ In addition, the gem also created a constant under the `ActivityFeed` namespace.
 Both syntaxes can be used interchangeably, just make sure you execute initialization of the configuration before you reference the constant.
  
 ```ruby
-   ActivityFeed::FriendsNews === ActivityFeed.create_or_replace(:friends_news)
+   ActivityFeed::FriendsNews === ActivityFeed.find_or_create(:friends_news)
    # => true
 ```
 
@@ -145,7 +145,7 @@ that object.
     # several parallel jobs by ActivityFeed.
     
     @follower = User.where(follower: @event.actor)
-    @feed = ActivityFeed.create_or_replace(:followers_feed).for(@follower)
+    @feed = ActivityFeed.find_or_create(:followers_feed).for(@follower)
     @feed.publish(event: @event, sort: Time.now) # publish the event sorted by time.
 ```
 
@@ -156,7 +156,7 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-    @feed = ActivityFeed.create_or_replace(:news_feed).for do
+    @feed = ActivityFeed.find_or_create(:news_feed).for do
       User.where(followee: @event.actor)
           .find_in_batches(batch_size: 1000) { |users| yield(users) }
     end
@@ -172,7 +172,7 @@ If you are not using Rails, you can still use any custom method that yields batc
   require 'activity-feed'
 
   # You can also use just #reader method, instead of #create_reader
-  @feed = ActivityFeed.create_or_replace(:news_feed).for(User.where(username: 'kig').first)
+  @feed = ActivityFeed.find_or_create(:news_feed).for(User.where(username: 'kig').first)
   @feed.paginate(page: 1, per_page: 20)  
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
 ```

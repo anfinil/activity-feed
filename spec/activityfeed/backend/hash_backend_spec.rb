@@ -5,17 +5,18 @@ module ActivityFeed
     describe HashBackend do
       include_examples :users
       include_examples :hash_backend
+      include_examples :events
 
       before do
-        ActivityFeed.create_or_replace(:news) do |config|
+        ActivityFeed.find_or_create(:news) do |config|
           config.backend  = HashBackend.new
           config.max_size = 5
           config.per_page = 2
         end
       end
 
-      let(:feed_config) { ActivityFeed.feed(:news) }
-      subject(:user_feed) { feed_config.for(user_list) }
+      let(:feed) { ActivityFeed.feed(:news) }
+      subject(:user_feed) { feed.for(user_list) }
       
       context 'feeds backend' do
         it('should not be nil') { expect(ActivityFeed.feed(:news)).to_not be_nil }
@@ -23,17 +24,12 @@ module ActivityFeed
         it('should be of type HashBackend') { expect(subject.backend).to be_kind_of(HashBackend) }
       end
 
-      context 'HashBackend' do
+      context 'writing to the feed' do
         it('should be able to push and retrieve events') do
-          feed_config.for(user_list)
+          feed.for(user_list)
         end
       end
 
-      context 'publish' do
-        it 'should push the event to the list' do
-
-        end
-      end
     end
   end
 end

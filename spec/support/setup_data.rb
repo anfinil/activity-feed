@@ -11,7 +11,9 @@ module ActivityFeed
 
   class TestUser
     attr_accessor :id, :username
-
+    
+    include Serializable
+    
     def initialize(id = nil, username = nil)
       self.id       = id
       self.username = username

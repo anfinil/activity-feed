@@ -46,7 +46,7 @@ module ActivityFeed
       private
       
       def [](user)
-        h[user.to_af] ||= ActivityFeed::User::Events.new(user)
+        h[user.to_af] ||= ::ActivityFeed::User::Events.new(user)
       end
       
     end

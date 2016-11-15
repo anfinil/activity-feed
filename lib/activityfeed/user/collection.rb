@@ -17,7 +17,7 @@ module ActivityFeed
       def initialize(users, config)
         self.users   = users
         self.config  = config
-        self.backend = config.backend if config && config.respond_to?(:backend)
+        self.backend = config.backend
       end
 
       def each(&block)
