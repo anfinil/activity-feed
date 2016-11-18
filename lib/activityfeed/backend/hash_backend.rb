@@ -47,7 +47,7 @@ module ActivityFeed
       def users
         keys.
           map { |u| u.gsub(/^#{config.namespace}/, '') }.
-          map { |u| ActivityFeed::Serializable::Deserializer.klass_instance(u) }
+          map { |u| ActivityFeed::Serializable::Registry.klass_instance(u) }
       end
       
 

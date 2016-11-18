@@ -1,25 +1,11 @@
 require 'spec_helper'
 
 module ActivityFeed
-  class SerializableUser < TestUser
-    include ActivityFeed::Serializable
-
-    def eql?(other)
-      other.is_a?(self.class) && other.id == id && other.username == username
-    end
-  end
 
   RSpec.describe Serializable do
     include_context :users_context
 
-    before do
-      class SerializableUser < TestUser
-        include ActivityFeed::Serializable
-      end
-    end
-
     describe 'serialization' do
-
       subject { SerializableUser.new(10, :bob) }
 
       context 'default #to_af method' do
@@ -50,18 +36,18 @@ module ActivityFeed
         subject { 'su-%a' }
         it { is_expected.to deserialize_as(SerializableUser.new(10)) }
       end
-    
+
       describe 'symbol' do
         subject { 'su-!kigster' }
-        it { is_expected.to deserialize_as(SerializableUser.new(:kigster)) }  
+        it { is_expected.to deserialize_as(SerializableUser.new(:kigster)) }
       end
 
       describe 'string' do
         subject { 'su-&kigster' }
-        it { is_expected.to deserialize_as(SerializableUser.new('kigster')) }  
+        it { is_expected.to deserialize_as(SerializableUser.new('kigster')) }
       end
     end
-    
+
     context 'serializing events' do
       include_context :events_context
     end

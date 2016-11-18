@@ -1,3 +1,5 @@
+require 'activityfeed/serializable'
+
 module ActivityFeed
   module User
     class Proxy
@@ -9,7 +11,10 @@ module ActivityFeed
       # to +#to_af+, or a proc that yields a batch of users
       def initialize(user, config = nil)
         self.user = user
-        raise InstanceMustBeSerializableError.new(user) unless serializable?(user)
+        unless serializable?(user)
+          puts ActivityFeed::Serializable::Registry.instance.inspect
+          raise InstanceMustBeSerializableError.new(user)
+        end
         self.config = config if config
       end
 
@@ -19,9 +24,15 @@ module ActivityFeed
         self.backend = config.backend
       end
 
+      #==================================================================
+      
       def publish!(event, sort)
         raise InstanceMustBeSerializableError.new(event) unless serializable?(event)
         backend.publish!(user, event, sort)
+      end
+
+      def read!
+        backend.read!(user)
       end
 
       # Removes the current event (if available) from the given set of users
@@ -33,10 +44,6 @@ module ActivityFeed
         backend.paginate(user, page, per_page)
       end
 
-      def read?
-        count_unread == 0
-      end
-
       def count_unread
         backend.count_unread(user)
       end
@@ -44,14 +51,16 @@ module ActivityFeed
       def count
         backend.count(user)
       end
+      
+      #==================================================================
 
-      def read!
-        backend.read!(user)
+      def read?
+        count_unread == 0
       end
 
       private
       def serializable?(obj)
-        obj.respond_to?(:to_af) or (obj.is_a?(String) and obj.length < 100)
+        obj.respond_to?(:to_af) && ActivityFeed::Serializable::Registry.supports?(obj)
       end
     end
   end

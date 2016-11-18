@@ -14,55 +14,56 @@ RSpec.shared_examples :backend_test do |*|
   }
 
   let!(:users_feed) { feed.for(user_list) }
-  let!(:toms_feed) { feed.for(tom) }
-  let!(:kig_feed) { feed.for(kig) }
+  let!(:bobs_feed) { feed.for(bob) }
+  let!(:ben_feed) { feed.for(ben) }
 
   before :each do
-    event_list.each(&:fire!)
+    event_list
   end
 
-  context 'events for tom are fired' do
+  context 'events for bob are fired' do
     it 'should have the correct backend assigned' do
       expect(feed.backend).to eq(backend)
     end
 
-    it 'should only have toms key' do
+    it 'should only have one key' do
       expect(backend.size).to eq(1)
     end
 
-    it 'should have toms key in the correct format' do
-      expect(backend.keys.first).to eq(tom.to_af)
-      expect(backend.keys.first).to match /^tu-%/
-      expect(backend.keys.first).to eq('tu-%' + Base62.encode(tom.id))
+    it 'should have bobs key in the correct format' do
+      expect(backend.keys.first).to eq(ben.to_af)
+      expect(backend.keys.first).to match /^su-%/
+      expect(backend.keys.first).to eq('su-%' + Base62.encode(ben.id))
     end
 
     it 'should have correct number of events' do
-      expect(toms_feed.count).to eq(3)
-      expect(toms_feed.count_unread).to eq(3)
+      puts ben_feed.paginate(1, 100).map(&:inspect)
+      expect(ben_feed.count).to eq(3)
+      expect(ben_feed.count_unread).to eq(3)
     end
 
     context '#reset_read_time!' do
       before do
-        toms_feed.read!
+        bobs_feed.read!
         comment_event2.fire!
       end
 
-      it 'should reset toms read time when called' do
-        expect(toms_feed.count).to eq(4)
-        expect(toms_feed.count_unread).to eq(1)
+      it 'should reset bobs read time when called' do
+        expect(bobs_feed.count).to eq(4)
+        expect(bobs_feed.count_unread).to eq(1)
       end
     end
 
     describe '#paginate' do
-      subject(:toms_events) { toms_feed.paginate(1, 10) }
+      subject(:bobs_events) { bobs_feed.paginate(1, 10) }
 
       it 'should return events in a reverse chronological order' do
-        expect(toms_events[0].created).to be > toms_events[1].created
-        expect(toms_events[1].created).to be > toms_events[2].created
+        expect(bobs_events[0].created).to be > bobs_events[1].created
+        expect(bobs_events[1].created).to be > bobs_events[2].created
       end
 
       it 'should equal to the reversed event list' do
-        expect(toms_events).to eq(event_list.reverse)
+        expect(bobs_events).to eq(event_list.reverse)
       end
     end
 

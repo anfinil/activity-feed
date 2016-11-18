@@ -73,8 +73,9 @@ module ActivityFeed
       context 'generating feed instances' do
         include_context :fake_backend_context
         
-        let(:user1) { double('Fred', to_af: 'fred') }
-        let(:user2) { double('Josh', to_af: 'josh') }
+        let(:user1) { SerializableUser.new(1, 'Fred') }
+        let(:user2) { SerializableUser.new(1, 'Josh') }
+        
         let(:user_list) { [user1, user2] }
         
         before do

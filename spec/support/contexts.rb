@@ -8,10 +8,17 @@ RSpec.shared_context :fake_backend_context do |*|
 end
 
 RSpec.shared_context :users_context do |*|
-  ActivityFeed::TestUser::USERS.each do |u|
+  ActivityFeed::TestUser.users.each do |u|
     let(u.username) { u }
   end
-  let(:user_list) { ActivityFeed::TestUser::USERS }
+  let(:user_list) { ActivityFeed::TestUser.users }
+end
+
+RSpec.shared_context :serializable_users_context do |*|
+  ActivityFeed::SerializableUser.users.each do |u|
+    let(u.username) { u }
+  end
+  let(:user_list) { ActivityFeed::SerializableUser.users }
 end
 
 RSpec.shared_context :hash_backend_context do |*|
@@ -20,6 +27,9 @@ RSpec.shared_context :hash_backend_context do |*|
       config: ActivityFeed.feed(:hash_feed)
     )
   }
+
+  let(:followers_feed) { hash_backend }
+  let(:backend){ hash_backend }
 
   before do
     hash_backend.config.configure do |c|
@@ -30,26 +40,16 @@ RSpec.shared_context :hash_backend_context do |*|
 end
 
 RSpec.shared_context :events_context do |*|
-  include_context :users_context
+  include_context :serializable_users_context
 
-  require 'support/events/abstract_event'
-  let(:comment) { double('comment', user: tom) }
-
-  let(:comment_event_new) {
-    ->(user, comment) {
-      MyApp::Events::CommentedOnPostEvent.new(actor: user, target: comment, owner: comment.user) }
-  }
-
-  let(:follow_event_new) {
-    ->(follower, followee) {
-      MyApp::Events::FollowedUserEvent.new(actor: follower, target: followee)
-    }
-  }
-
-  let(:comment_event1) { comment_event_new.call(pam, comment) }
-  let(:comment_event2) { comment_event_new.call(kig, comment) }
-  let(:follow_event1) { follow_event_new.call(kig, tom) }
-  let(:follow_event2) { follow_event_new.call(pam, tom) }
+  let(:bob) { ActivityFeed::SerializableUser.new(1, 'Bob') }
+  let(:ben) { ActivityFeed::SerializableUser.new(2, 'Ben') }
+  
+  let(:comment_event1) { bob.comment!('Hi, Ben!', ben) }
+  let(:comment_event2) { ben.comment!('Hi, Bob!', bob) }
+  
+  let(:follow_event1) { bob.follow!(ben) }
+  let(:follow_event2) { tom.follow!(ben) }
 
   let(:event_list) { [follow_event1, follow_event2, comment_event1] }
-  end
+end

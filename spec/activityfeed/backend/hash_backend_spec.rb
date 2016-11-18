@@ -5,7 +5,7 @@ module ActivityFeed
     describe HashBackend do
 
       context 'unit tests' do
-        include_context :users_context
+        include_context :serializable_users_context
         include_context :hash_backend_context
         include_context :events_context
 
@@ -35,10 +35,10 @@ module ActivityFeed
 
       context 'integration tests' do
         include_context :hash_backend_context
-        let!(:backend) { hash_backend }
-
         include_examples :backend_test
       end
+
+  
     end
   end
 end
