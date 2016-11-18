@@ -27,7 +27,7 @@ module ActivityFeed
         self[user].remove(event)
       end
 
-      def reset_last_read!(user)
+      def read!(user)
         self[user].read!
       end
 

@@ -35,9 +35,21 @@ RSpec.shared_context :events_context do |*|
   require 'support/events/abstract_event'
   let(:comment) { double('comment', user: tom) }
 
-  let(:comment_event) { MyApp::Events::CommentedOnPostEvent.new(actor: pam, target: comment, owner: comment.user) }
-  let(:follow_event1) { MyApp::Events::FollowedUserEvent.new(actor: kig, target: tom, owner: tom) }
-  let(:follow_event2) { MyApp::Events::FollowedUserEvent.new(actor: pam, target: tom, owner: tom) }
+  let(:comment_event_new) {
+    ->(user, comment) {
+      MyApp::Events::CommentedOnPostEvent.new(actor: user, target: comment, owner: comment.user) }
+  }
 
-  let(:event_list) { [follow_event1, follow_event2, comment_event] }
-end
+  let(:follow_event_new) {
+    ->(follower, followee) {
+      MyApp::Events::FollowedUserEvent.new(actor: follower, target: followee)
+    }
+  }
+
+  let(:comment_event1) { comment_event_new.call(pam, comment) }
+  let(:comment_event2) { comment_event_new.call(kig, comment) }
+  let(:follow_event1) { follow_event_new.call(kig, tom) }
+  let(:follow_event2) { follow_event_new.call(pam, tom) }
+
+  let(:event_list) { [follow_event1, follow_event2, comment_event1] }
+  end

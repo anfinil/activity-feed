@@ -6,7 +6,7 @@ module ActivityFeed
     class Collection
       include Enumerable
 
-      FORWARDED_WRITE_METHODS = %i(publish! remove! reset_last_read!)
+      FORWARDED_WRITE_METHODS = %i(publish! remove! read!)
       FORWARDED_READ_METHODS  = %i(paginate unread_count count)
       FORWARDED_METHODS       = FORWARDED_READ_METHODS + FORWARDED_WRITE_METHODS
 

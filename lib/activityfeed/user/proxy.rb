@@ -45,8 +45,8 @@ module ActivityFeed
         backend.count(user)
       end
 
-      def reset_last_read!
-        backend.reset_last_read!(user)
+      def read!
+        backend.read!(user)
       end
 
       private

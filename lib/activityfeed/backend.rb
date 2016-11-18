@@ -1,8 +1,7 @@
 module ActivityFeed
   module Backend
-    REQUIRED_METHODS = %i(publish! remove! reset_last_read! paginate unread_count count)
+    REQUIRED_METHODS = %i(publish! remove! read! paginate unread_count count)
 
-    
     def self.included(klass)
       klass.class_eval do
         REQUIRED_METHODS.each do |method_name|

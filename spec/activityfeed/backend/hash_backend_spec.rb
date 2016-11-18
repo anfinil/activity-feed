@@ -1,5 +1,5 @@
 require 'spec_helper'
-
+require 'base62-rb'
 module ActivityFeed
   module Backend
     describe HashBackend do
@@ -34,49 +34,10 @@ module ActivityFeed
       end
 
       context 'integration tests' do
-        include_context :events_context
         include_context :hash_backend_context
+        let!(:backend) { hash_backend }
 
-        let(:feed_name) { :follower_feed }
-
-        let(:feed) {
-          ActivityFeed.clear!
-          ActivityFeed.feed(feed_name) { |config| config.backend = hash_backend }
-        }
-
-        let(:users_feed) { feed.for(user_list) }
-        let(:toms_feed) { feed.for(tom) }
-        let(:kig_feed) { feed.for(kig) }
-
-        before :each do
-          expect(feed.backend).to eq(hash_backend)
-          event_list.each(&:fire!)
-        end
-
-        context 'events for tom are fired' do
-          it 'should only have toms key' do
-            expect(hash_backend.size).to eq(1)
-          end
-
-          it 'should have correct number of events' do
-            expect(toms_feed.count).to eq(3)
-            expect(toms_feed.count_unread).to eq(3)
-          end
-
-          describe '#paginate' do
-            subject(:toms_events) { toms_feed.paginate(1, 10) }
-
-            it 'should return events in a reverse chronological order' do
-              expect(toms_events[0].created).to be > toms_events[1].created
-              expect(toms_events[1].created).to be > toms_events[2].created
-            end
-
-            it 'should equal to the reversed event list' do
-              expect(toms_events).to eq(event_list.reverse)
-            end
-          end
-
-        end
+        include_examples :backend_test
       end
     end
   end
