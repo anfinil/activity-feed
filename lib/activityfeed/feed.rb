@@ -5,7 +5,7 @@ module ActivityFeed
 end
 
 
-require 'activityfeed/user/events'
+require 'activityfeed/user/event_list'
 require 'activityfeed/user/proxy'
 require 'activityfeed/user/collection'
 

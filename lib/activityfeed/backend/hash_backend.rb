@@ -54,7 +54,7 @@ module ActivityFeed
       private
 
       def [](user)
-        __hash[::ActivityFeed::User::Events.hash_key(user)] ||= ::ActivityFeed::User::Events.new(user)
+        __hash[::ActivityFeed::User::EventList.hash_key(user)] ||= ::ActivityFeed::User::EventList.new(user)
       end
     end
   end

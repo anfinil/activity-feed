@@ -39,16 +39,14 @@ module ActivityFeed
 
         let(:feed_name) { :follower_feed }
 
-        let(:feed_config) {
+        let(:feed) {
           ActivityFeed.clear!
-          ActivityFeed.find_or_create(feed_name) do |config|
-            config.backend = hash_backend
-          end
+          ActivityFeed.find_or_create(feed_name) { |config| config.backend = hash_backend }
         }
 
-        let(:feed) { feed_config.for(user_list) }
-        let(:toms_feed) { feed_config.for(tom) }
-        let(:kig_feed) { feed_config.for(kig) }
+        let(:users_feed) { feed.for(user_list) }
+        let(:toms_feed) { feed.for(tom) }
+        let(:kig_feed) { feed.for(kig) }
 
         before :each do
           expect(feed.backend).to eq(hash_backend)

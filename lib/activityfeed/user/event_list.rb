@@ -1,21 +1,21 @@
 module ActivityFeed
   module User
-    class Events
-      Event = Struct.new(:event, :score)
-
-      attr_accessor :user, :events, :last_read_at
-
-      def initialize(user = nil)
-        self.events ||= []
-        self.user   = user
-      end
-      
+    class EventList
       def self.hash_key(user)
         user.to_af
       end
 
+      ScoredEvent = Struct.new(:event, :score)
+
+      attr_accessor :user, :events, :last_read_at
+
+      def initialize(user = nil, events = [])
+        self.events = events
+        self.user   = user
+      end
+      
       def push(event, score)
-        events.unshift(Event.new(event, score))
+        events.unshift(ScoredEvent.new(event, score))
         self
       end
 
