@@ -10,13 +10,18 @@ module ActivityFeed
       FORWARDED_READ_METHODS  = %i(paginate unread_count count)
       FORWARDED_METHODS       = FORWARDED_READ_METHODS + FORWARDED_WRITE_METHODS
 
-      attr_accessor :config
+      attr_reader :config
       attr_accessor :backend
       attr_accessor :users
 
-      def initialize(users, config)
+      def initialize(users, config = nil)
         self.users   = users
-        self.config  = config
+        self.config  = config if config
+      end
+
+      def config=(config)
+        raise ArgumentError, "No backend defined in config #{config}" unless config.backend
+        @config      = config
         self.backend = config.backend
       end
 

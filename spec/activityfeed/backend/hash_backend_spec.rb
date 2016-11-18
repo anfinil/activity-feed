@@ -10,7 +10,7 @@ module ActivityFeed
         include_context :events_context
 
         before do
-          ActivityFeed.find_or_create(:news) do |config|
+          ActivityFeed.feed(:news) do |config|
             config.backend  = HashBackend.new(config: config)
             config.max_size = 5
             config.per_page = 2
@@ -41,7 +41,7 @@ module ActivityFeed
 
         let(:feed) {
           ActivityFeed.clear!
-          ActivityFeed.find_or_create(feed_name) { |config| config.backend = hash_backend }
+          ActivityFeed.feed(feed_name) { |config| config.backend = hash_backend }
         }
 
         let(:users_feed) { feed.for(user_list) }

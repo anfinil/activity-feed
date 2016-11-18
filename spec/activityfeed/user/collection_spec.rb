@@ -12,7 +12,7 @@ module ActivityFeed
       end
 
       let(:configuration) {
-        ActivityFeed.find_or_create(:news_feed) do |c|
+        ActivityFeed.feed(:news_feed) do |c|
           c.backend = @backend  
         end
       }

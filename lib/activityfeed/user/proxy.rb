@@ -2,15 +2,20 @@ module ActivityFeed
   module User
     class Proxy
 
-      attr_accessor :user, :config, :backend
+      attr_accessor :user, :backend
+      attr_reader :config
 
       # @param user is either an array create models that respond
       # to +#to_af+, or a proc that yields a batch of users
-      def initialize(user, config)
+      def initialize(user, config = nil)
         self.user = user
         raise InstanceMustBeSerializableError.new(user) unless serializable?(user)
-        self.config  = config
+        self.config = config if config
+      end
+
+      def config=(config)
         raise ArgumentError, "No backend defined in config #{config}" unless config.backend
+        @config      = config
         self.backend = config.backend
       end
 

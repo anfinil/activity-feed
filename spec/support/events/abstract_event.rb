@@ -15,6 +15,7 @@ module MyApp
         klass.instance_eval do
           include Ventable::Event
           include ActivityFeed::Serializable
+
           class << self
             attr_accessor :activity_feeds
 

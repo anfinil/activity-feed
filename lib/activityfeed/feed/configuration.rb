@@ -35,14 +35,16 @@ module ActivityFeed
       end
       
       def configure
-        yield self if block_given?
+        yield self if
         self
       end
 
       def for(users)
-        (COLLECTION_TYPES.any? { |t| users.is_a?(t) }) ?
-          ActivityFeed::User::Collection.new(users, self) :
-          ActivityFeed::User::Proxy.new(users, self)
+        feed_wrapper = (COLLECTION_TYPES.any? { |t| users.is_a?(t) }) ?
+          ActivityFeed::User::Collection.new(users) :
+          ActivityFeed::User::Proxy.new(users)
+        feed_wrapper.config = self if feed_wrapper.respond_to?(:config=)
+        feed_wrapper
       end
       
       def equal?(other)

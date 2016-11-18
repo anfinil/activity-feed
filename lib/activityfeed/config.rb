@@ -24,8 +24,16 @@ module ActivityFeed
         instance.clear
       end
 
-      def feeds
+      def feed_names
         instance.keys
+      end
+
+      def feeds
+        instance.values
+      end
+
+      def i
+        instance
       end
 
       def [](value)
@@ -37,17 +45,17 @@ module ActivityFeed
       __feed(key, false, *args, &block)
     end
 
-    def find_or_create(key, *args, &block)
+    def feed(key, *args, &block)
       __feed(key, true, *args, &block)
     end
 
 
     private
 
-    def __feed(key, find_or_create, *args, &block)
+    def __feed(key, feed, *args, &block)
       name = key.to_sym
 
-      if self[name] && find_or_create
+      if self[name] && feed
         block.call(self[name]) if block
 
       elsif self[name]

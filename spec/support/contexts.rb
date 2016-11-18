@@ -17,7 +17,7 @@ end
 RSpec.shared_context :hash_backend_context do |*|
   let(:hash_backend) {
     ActivityFeed::Backend::HashBackend.new(
-      config: ActivityFeed.find_or_create(:hash_feed)
+      config: ActivityFeed.feed(:hash_feed)
     )
   }
 

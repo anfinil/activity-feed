@@ -53,7 +53,7 @@ First you need to configure the Feed with a valid backend implementation.
     require 'activity-feed'
     require 'redis'
       
-    ActivityFeed.find_or_create(:friends_news) do |config|
+    ActivityFeed.feed(:friends_news) do |config|
       config.backend      = ActivityFeed::Backend::RedisBackend.new(
         config: config,
         redis: -> { ::Redis.new(host: '127.0.0.1') },
@@ -77,7 +77,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
     
   # This is the feed of news articles based on user
   # subscription preferences, use a local hash implementation
-  ActivityFeed.find_or_create(:friends_news) do |config|
+  ActivityFeed.feed(:friends_news) do |config|
     config.backend = ActivityFeed::Backend::HashBackend.new(
       config: config
     )
@@ -86,7 +86,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
 
   # This is the feed of events associated with the followers.
   # We use ConnectionPool because we anticipate higher load.
-  ActivityFeed.find_or_create(:followers) do |config|
+  ActivityFeed.feed(:followers) do |config|
     config.backend = ActivityFeed::Backend::RedisBackend.new(
       config: config,
       redis: ::ConnectionPool.new(size: 5, timeout: 5) do
@@ -101,7 +101,7 @@ We can create an additional activity feed, say for followers, and call it `:foll
 
 So how do you access the feed from your code? Please check the UML diagram above to see how objects are returned.
 
-When we called `ActivityFeed.find_or_create(:friends_news)` for the very first time, the library created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
+When we called `ActivityFeed.feed(:friends_news)` for the very first time, the library created a hash key `:friends_news` that from now on will point to this instance of the feed configuration within the application.
 
 In addition, the gem also created a constant and a method under the `ActivityFeed` namespace. For example, given a name such as `:friends_news` the following are all valid ways of accessing the feed:
 
@@ -143,7 +143,7 @@ that object.
     # several parallel jobs by ActivityFeed.
     
     @follower = User.where(follower: @event.actor)
-    @feed = ActivityFeed.find_or_create(:followers_feed).for(@follower)
+    @feed = ActivityFeed.feed(:followers_feed).for(@follower)
     @feed.publish(event: @event, sort: Time.now) # publish the event sorted by time.
 ```
 
@@ -154,7 +154,7 @@ For large data sets it is generally required to use batch operations, instead of
 If you are not using Rails, you can still use any custom method that yields batches, one by one, to the block, where each batch can be as an array of integers or models.
 
 ```ruby
-    @feed = ActivityFeed.find_or_create(:news_feed).for do
+    @feed = ActivityFeed.feed(:news_feed).for do
       User.where(followee: @event.actor)
           .find_in_batches(batch_size: 1000) { |users| yield(users) }
     end
@@ -170,7 +170,7 @@ If you are not using Rails, you can still use any custom method that yields batc
   require 'activity-feed'
 
   # You can also use just #reader method, instead of #create_reader
-  @feed = ActivityFeed.find_or_create(:news_feed).for(User.where(username: 'kig').first)
+  @feed = ActivityFeed.feed(:news_feed).for(User.where(username: 'kig').first)
   @feed.paginate(page: 1, per_page: 20)  
   # => [ <Events::FavoriteCommentEvent#0x2134afa user: ..., comment: ...>, <Events::StoryPostedEvent...>]
 ```
