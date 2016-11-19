@@ -35,7 +35,7 @@ module ActivityFeed
       end
       
       def configure
-        yield self if
+        yield self if block_given?
         self
       end
 

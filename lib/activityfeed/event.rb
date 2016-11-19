@@ -13,6 +13,13 @@ module ActivityFeed
   # end
   #```
   module Event
+    class Registry < ::Hash
+      include Singleton
+      class << self
+        extend Forwardable
+        def_delegators :@singleton__instance__, :[], :[]=, :keys, :key, :value, :values
+      end
+    end
 
     def self.included(klass)
       klass.instance_eval do
@@ -57,11 +64,16 @@ module ActivityFeed
           raise AbstractMethodCalledError, 'Please override #audience in the event classes'
         end
 
+        def with_each_feed(&block)
+          self.class.feeds.each do |feed|
+            block.call(ActivityFeed.feed(feed).for(audience)) if block
+          end
+        end
+
         def fire!
           super
-          self.class.feeds.each do |feed|
-            ActivityFeed.feed(feed).for(audience).publish!(self, self.created)
-          end
+          with_each_feed { |feed| feed.publish!(self, self.created) }
+          self
         end
       end
     end

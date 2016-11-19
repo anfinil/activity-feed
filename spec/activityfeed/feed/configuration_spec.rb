@@ -80,7 +80,7 @@ module ActivityFeed
         
         before do
           ActivityFeed.feed(:sample_feed) do |config|
-            config.backend = fake_backend
+            config.backend = backend
           end
         end
 

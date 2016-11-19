@@ -32,10 +32,6 @@ module ActivityFeed
         instance.values
       end
 
-      def i
-        instance
-      end
-
       def [](value)
         instance[value]
       end
@@ -48,7 +44,6 @@ module ActivityFeed
     def feed(key, *args, &block)
       __feed(key, true, *args, &block)
     end
-
 
     private
 

@@ -25,9 +25,9 @@ module ActivityFeed
       def paginate(page = 1, per_page = config.per_page, &block)
         events
           .map(&:event)
-          .sort{ |a, b| block_given? ? yield(a,b) : b.created <=> a.created }[((page - 1) * per_page) .. (page * per_page)]
+          .sort{ |a, b| block_given? ? yield(a,b) : b.created <=> a.created }[((page - 1) * per_page)..(page * per_page)]
       end
-
+      
       def read!(time = Time.now.to_f)
         self.last_read_at = time
       end

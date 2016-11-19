@@ -27,12 +27,14 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'redis', '~> 3.3'
   spec.add_dependency 'connection_pool', '~> 2.2'
   spec.add_dependency 'activesupport'
+  spec.add_dependency 'ventable'
 
+  spec.add_development_dependency 'awesome_print'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'yard'
   spec.add_development_dependency 'codeclimate-test-reporter', '~> 1'
-
-  spec.add_development_dependency 'ventable'
+  spec.add_development_dependency 'guard'
+  spec.add_development_dependency 'guard-rspec'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake', '~> 10.0'
   spec.add_development_dependency 'rspec', '~> 3.0'

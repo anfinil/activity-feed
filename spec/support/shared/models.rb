@@ -1,8 +1,10 @@
 module ActivityFeed
   module Backend
     srand(1098010932048023984029)
+
     class FakeBackend
       include Backend
+
       ActivityFeed::User::Collection::FORWARDED_METHODS.each do |method|
         self.send(:define_method, method) do |*args|
           puts "#{self.inspect}: method: #{method} args: #{args}"
@@ -19,22 +21,26 @@ module ActivityFeed
       self.username  = username
       self.followers = []
     end
-    
+
     def follow!(followee)
-      unless followee.followers.include?(self)
+      unless followee.followers.any?{|f| f == self or f.username == self.username }
         followee.followers << self
-        MyApp::Events::FollowedUserEvent.new(actor: self, target: followee)
       end
+      MyApp::Events::FollowedUserEvent.new(actor: self, target: followee).fire!
     end
-    
+
     def comment!(body, other_user)
-      MyApp::Events::CommentedOnPostEvent.new(actor: self, target: body, owner: other_user)
+      MyApp::Events::CommentedOnPostEvent.new(actor: self, target: body, owner: other_user).fire!
+    end
+
+    def inspect
+      "#{self.class.name.gsub(/.*::/, '')}:#{username} [id=#{id}] followed_by <—— #{followers.map(&:username).map(&:to_sym).inspect}"
     end
 
     class << self
       def define_users(user_names)
         user_names.map do |user_name|
-          self.new(rand(2**32), user_name.to_s)
+          self.new(1024 + rand(2**29), user_name.to_s)
         end
       end
 
