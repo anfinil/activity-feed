@@ -5,15 +5,14 @@ module ActivityFeed
     describe Collection do
       include_context :users_context
       include_context :fake_backend_context
-      
-      before :each do
-        # ActivityFeed.clear!
-        @backend = fake_backend
+
+      before do
+        ActivityFeed.clear!
       end
 
       let(:configuration) {
-        ActivityFeed.feed(:news_feed) do |c|
-          c.backend = @backend  
+        ActivityFeed.feed(feed_name) do |c|
+          c.backend = backend
         end
       }
       let(:collection) {
@@ -26,11 +25,22 @@ module ActivityFeed
         it 'should call #publish on the backend twice' do
           expect(users.is_a?(Array)).to be_truthy
           expect(collection.users).to eq(users)
-          expect(collection.backend).to eq(@backend)
+          expect(collection.backend).to eq(backend)
 
-          expect(fake_backend).to receive(:publish!).with(users[0], 1, sort)
-          expect(fake_backend).to receive(:publish!).with(users[1], 1, sort)
+          expect(backend).to receive(:publish!).with(users[0], 1, sort)
+          expect(backend).to receive(:publish!).with(users[1], 1, sort)
           collection.publish!(1, sort)
+        end
+        context 'empty array' do
+          let(:users) { [] }
+          it 'should not call #publish on the backend' do
+            expect(users.is_a?(Array)).to be_truthy
+            expect(collection.users).to eq(users)
+            expect(collection.backend).to eq(backend)
+
+            expect(backend).not_to receive(:publish!)
+            collection.publish!(1, sort)
+          end
         end
       end
 
@@ -40,10 +50,10 @@ module ActivityFeed
         it 'should call #publish on the backend twice' do
           expect(users.is_a?(Array)).to be_truthy
           expect(collection.users).to eq(users)
-          expect(collection.backend).to eq(@backend)
+          expect(collection.backend).to eq(backend)
 
           flattened_users.each do |u|
-            expect(fake_backend).to receive(:publish!).with(u, 1, sort)
+            expect(backend).to receive(:publish!).with(u, 1, sort)
           end
           
           collection.publish!(1, sort)
@@ -59,12 +69,12 @@ module ActivityFeed
           expect(user_list.is_a?(Array)).to be_truthy
           expect(collection.users.is_a?(Proc)).to be_truthy
           expect(collection.users).to eq(users)
-          expect(collection.backend).to eq(@backend)
+          expect(collection.backend).to eq(backend)
         end
         
         it 'should proxy publish! to each user proxy' do
           user_list.flatten.each do |u|
-            expect(@backend).to receive(:publish!).with(u, event, sort)
+            expect(backend).to receive(:publish!).with(u, event, sort)
           end
           collection.publish!(event, sort)
 

@@ -4,7 +4,7 @@ require 'singleton'
 module ActivityFeed
   module Serializable
     module Serializer
-      
+
       module ClassMethods
         attr_accessor :identifier_get_method, :identifier_set_method
 
@@ -36,20 +36,30 @@ module ActivityFeed
                           value
                         end
 
-          # eg. call self.id = 2134 or self.username = :kigster
-          send(self.class.identifier_set_method, unpacked_id)
+          if self.respond_to?(self.class.identifier_set_method)
+            # eg. call self.id = 2134 or self.username = :kigster
+            send(self.class.identifier_set_method, unpacked_id)
+          elsif value_class == Marshal
+            Marshal.load(value)
+          end
+          
         end
 
         def __af_id
-          @__af_id ||= self.send(self.class.identifier_get_method)
-          case @__af_id
-            when Numeric
-              TYPE_CHAR[Numeric] + Base62.encode(@__af_id)
-            when *TYPE_CHAR.keys
-              TYPE_CHAR[@__af_id.class] + @__af_id.to_s
-            else
-              raise TypeError, "Unsupported ID class #{@__af_id.class.name}"
+          if self.respond_to?(self.class.identifier_get_method)
+            identifier ||= self.send(self.class.identifier_get_method)
+            @__af_id   ||= case identifier
+                             when Numeric
+                               TYPE_CHAR[Numeric] + Base62.encode(identifier)
+                             when *TYPE_CHAR.keys
+                               TYPE_CHAR[identifier.class] + identifier.to_s
+                             else
+                               raise TypeError, "Unsupported ID class #{identifier.class.name}"
+                           end
+          else
+            @__af_id ||= TYPE_CHAR[Marshal] + Marshal.dump(self)
           end
+
         end
 
       end

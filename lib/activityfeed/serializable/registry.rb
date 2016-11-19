@@ -3,7 +3,7 @@ require 'singleton'
 
 module ActivityFeed
   module Serializable
-    class Deserializer < ::Hash
+    class Registry < ::Hash
       include Singleton
       class << self
         def [](value)
@@ -19,7 +19,8 @@ module ActivityFeed
 
         def klass(string)
           klass_identifier = string.split(/-/)[0]
-          raise ArgumentError, "invalid serialized string [#{string}], can't find class identifier" unless klass_identifier
+          raise ArgumentError,
+                "invalid serialized string [#{string}], can't find class identifier" unless klass_identifier
           instance[klass_identifier.to_sym]
         end
 
@@ -31,6 +32,12 @@ module ActivityFeed
           created_instance         = type.new
           created_instance.__af_id = identifier
           created_instance
+        end
+
+        # We support an object, if its class is Serializable and is already included in the Registry.
+        def supports?(another_object)
+          another_object.class.ancestors.include?(ActivityFeed::Serializable) &&
+            instance[another_object.class.__af_type.to_sym]
         end
       end
     end
