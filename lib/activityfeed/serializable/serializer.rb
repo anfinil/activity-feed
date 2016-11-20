@@ -13,14 +13,15 @@ module ActivityFeed
           self.identifier_set_method = :"#{method}="
         end
 
-        def __af_type
-          @___af_type ||= self.name.gsub(/.*::/, '').split('').grep(/[A-Z]/).join.downcase
+        # Take only capital letters from the class name, eg User => 'U', 'UserProfile' => 'UP'
+        def af_type_id
+          @af_type_id ||= self.name.gsub(/.*::/, '').split('').grep(/[A-Z]/).join.downcase
         end
       end
 
       module InstanceMethods
         def to_af
-          @__af ||= "#{self.class.__af_type}-#{self.__af_id}"
+          @__af ||= "#{self.class.af_type_id}-#{self.__af_id}"
         end
 
         def __af_id=(val)
@@ -39,6 +40,7 @@ module ActivityFeed
           if self.respond_to?(self.class.identifier_set_method)
             # eg. call self.id = 2134 or self.username = :kigster
             send(self.class.identifier_set_method, unpacked_id)
+            send(self.class.af_load) if self.class.respond_to?(:af_load)
           elsif value_class == Marshal
             Marshal.load(value)
           end

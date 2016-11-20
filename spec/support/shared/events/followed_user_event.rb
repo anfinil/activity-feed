@@ -5,12 +5,12 @@ module MyApp
     class FollowedUserEvent
 
       include ActivityFeed::Event
+
       publishes_to :follower_feed
       
       def audience
         actor.followers
       end
-      
     end
   end
 end

@@ -51,7 +51,7 @@ First you need to configure the Feed with a valid backend implementation.
 
 ```ruby
     require 'activity-feed'
-    require 'redis'
+    require 'activity-feed/backend/redis_backend'
       
     ActivityFeed.feed(:friends_news) do |config|
       config.backend      = ActivityFeed::Backend::RedisBackend.new(
@@ -73,8 +73,9 @@ We can create an additional activity feed, say for followers, and call it `:foll
 
 ```ruby
   require 'activity-feed'
-  require 'redis'
-    
+  require 'activity-feed/backend/redis_backend'
+  require 'activity-feed/backend/hash_backend'
+  
   # This is the feed of news articles based on user
   # subscription preferences, use a local hash implementation
   ActivityFeed.feed(:friends_news) do |config|

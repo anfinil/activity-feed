@@ -2,6 +2,7 @@ require 'activityfeed/serializable'
 
 module ActivityFeed
   module User
+    # A proxy for forwarding feed-related requests to the appropriate backend.
     class Proxy
 
       attr_accessor :user, :backend

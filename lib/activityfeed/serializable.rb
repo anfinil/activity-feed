@@ -11,7 +11,7 @@ module ActivityFeed
         klass.extend(ActivityFeed::Serializable::Serializer::ClassMethods)
         
         # Register this class with the deserializer
-        ::ActivityFeed::Serializable::Registry[klass.__af_type] = klass
+        ::ActivityFeed::Serializable::Registry[klass.af_type_id] = klass
 
         # Default identifier to :id
         klass.identifier_method :id

@@ -37,7 +37,7 @@ module ActivityFeed
         # We support an object, if its class is Serializable and is already included in the Registry.
         def supports?(another_object)
           another_object.class.ancestors.include?(ActivityFeed::Serializable) &&
-            instance[another_object.class.__af_type.to_sym]
+            instance[another_object.class.af_type_id.to_sym]
         end
       end
     end

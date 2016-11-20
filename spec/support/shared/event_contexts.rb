@@ -8,13 +8,4 @@ RSpec.shared_context :events_context do |*|
 
   let(:bob) { ActivityFeed::SerializableUser.new(1, 'Bob') }
   let(:ben) { ActivityFeed::SerializableUser.new(2, 'Ben') }
-
-  let(:event_list) {
-    [
-      bob.follow!(ben),
-      tom.follow!(ben),
-      ben.comment!('Hi, Bob!', pam),
-      bob.comment!('Hi, Ben!', ben)
-    ]
-  }
 end

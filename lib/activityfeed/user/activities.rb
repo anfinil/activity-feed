@@ -1,7 +1,7 @@
 module ActivityFeed
   module User
-    class EventList
-      def self.hash_key(user)
+    class Activities
+      def self.to_key(user)
         user.to_af
       end
 

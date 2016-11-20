@@ -65,14 +65,15 @@ module ActivityFeed
         end
 
         def with_each_feed(&block)
-          self.class.feeds.each do |feed|
-            block.call(ActivityFeed.feed(feed).for(audience)) if block
+          self.class.feeds.each do |feed_name|
+            ActivityFeed.feed(feed_name).for(audience).instance_exec(&block)
           end
         end
 
         def fire!
           super
-          with_each_feed { |feed| feed.publish!(self, self.created) }
+          event = self
+          with_each_feed { publish!(event, event.created) }
           self
         end
       end
