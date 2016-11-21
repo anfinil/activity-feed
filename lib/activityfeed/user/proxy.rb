@@ -19,14 +19,14 @@ module ActivityFeed
         self.backend = config.backend
       end
 
-      def publish!(event, sort)
+      def add(event, sort)
         raise InstanceMustBeSerializableError.new(event) unless serializable?(event)
-        backend.publish!(user, event, sort)
+        backend.add(user, event, sort)
       end
 
       # Removes the current event (if available) from the given set of users
-      def remove!(event)
-        backend.remove!(user, event)
+      def remove(event)
+        backend.remove(user, event)
       end
 
       def paginate(page, per_page = config.per_page)
@@ -45,8 +45,8 @@ module ActivityFeed
         backend.count(user)
       end
 
-      def read!
-        backend.read!(user)
+      def reset_unread
+        backend.reset_unread(user)
       end
 
       private

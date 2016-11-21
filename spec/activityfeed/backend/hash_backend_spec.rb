@@ -10,18 +10,18 @@ module ActivityFeed
         include_context :events_context
 
         before do
-          ActivityFeed.feed(:news) do |config|
+          ActivityFeed.define(:news) do |config|
             config.backend  = HashBackend.new(config: config)
             config.max_size = 5
             config.per_page = 2
           end
         end
 
-        let(:feed) { ActivityFeed.feed(:news) }
+        let(:feed) { ActivityFeed.define(:news) }
         subject(:user_feed) { feed.for(user_list) }
 
         context 'feeds backend' do
-          it('should not be nil') { expect(ActivityFeed.feed(:news)).to_not be_nil }
+          it('should not be nil') { expect(ActivityFeed.define(:news)).to_not be_nil }
           it('should not be nil') { expect(subject.backend).to_not be_nil }
           it('should be of type HashBackend') { expect(subject.backend).to be_kind_of(HashBackend) }
         end

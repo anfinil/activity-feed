@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'activityfeed/backend'
 module ActivityFeed
   module User
     # This class decorates the +Feed+ class with operations performed across
@@ -6,8 +7,9 @@ module ActivityFeed
     class Collection
       include Enumerable
 
-      FORWARDED_WRITE_METHODS = %i(publish! remove! read!)
-      FORWARDED_READ_METHODS  = %i(paginate unread_count count)
+      FORWARDED_WRITE_METHODS = ActivityFeed::Backend::REQUIRED_METHODS[0..2]
+      FORWARDED_READ_METHODS  = ActivityFeed::Backend::REQUIRED_METHODS[3..-1]
+
       FORWARDED_METHODS       = FORWARDED_READ_METHODS + FORWARDED_WRITE_METHODS
 
       attr_reader :config

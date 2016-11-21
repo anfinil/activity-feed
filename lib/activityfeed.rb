@@ -1,46 +1,44 @@
 require 'forwardable'
 
+module ActivityFeed
+
+  @registry = {}
+
+  def self.registry
+    @registry
+  end
+
+  def self.define(name)
+    name   = name.to_sym
+    config = self.registry[name] ? self.registry[name] : Configuration.new(name)
+    yield config if block_given?
+    self.registry[name] = config
+    self.create_feed_method(name)
+    config
+  end
+
+  def self.[](name)
+    self.registry[name]
+  end
+
+  def self.feed_names
+    self.registry.keys
+  end
+
+  def self.clear!
+    self.registry.clear
+  end
+
+  def self.create_feed_method(feed_name)
+    method_body = %Q{def self.#{feed_name}; self[(:#{feed_name})]; end }
+    ActivityFeed.module_eval method_body
+  end
+
+end
 require 'activityfeed/version'
-
 require 'activityfeed/errors'
-
-require 'activityfeed/config'
+require 'activityfeed/configuration'
 require 'activityfeed/feed'
 require 'activityfeed/backend'
 require 'activityfeed/serializable'
 
-module ActivityFeed
-
-
-  class << self
-    # Returns the top-level Hash that contains all of the feeds,
-    # @returns Config instance
-    def configure(&block)
-      Config.configure(&block)
-    end
-
-    # Creates the new feed configuration based on the name provided.
-    # Raises an exception if the feed is already found.
-    def feed(name, *args, &block)
-      self.configure.feed(name, *args, &block)
-    end
-
-    def feeds
-      ActivityFeed::Config.feeds
-    end
-
-    def feed_names
-      ActivityFeed::Config.feed_names
-    end
-
-    def clear!
-      ActivityFeed::Config.clear!
-    end
-
-    def register(feed_name)
-      method_body = %Q{def self.#{feed_name}; self.feed(:#{feed_name}); end }
-      ActivityFeed.module_eval method_body
-    end
-
-  end
-end

@@ -12,7 +12,7 @@ module ActivityFeed
       end
 
       let(:configuration) {
-        ActivityFeed.feed(:news_feed) do |c|
+        ActivityFeed.define(:news_feed) do |c|
           c.backend = @backend  
         end
       }
@@ -28,9 +28,9 @@ module ActivityFeed
           expect(collection.users).to eq(users)
           expect(collection.backend).to eq(@backend)
 
-          expect(fake_backend).to receive(:publish!).with(users[0], 1, sort)
-          expect(fake_backend).to receive(:publish!).with(users[1], 1, sort)
-          collection.publish!(1, sort)
+          expect(fake_backend).to receive(:add).with(users[0], 1, sort)
+          expect(fake_backend).to receive(:add).with(users[1], 1, sort)
+          collection.add(1, sort)
         end
       end
 
@@ -43,10 +43,10 @@ module ActivityFeed
           expect(collection.backend).to eq(@backend)
 
           flattened_users.each do |u|
-            expect(fake_backend).to receive(:publish!).with(u, 1, sort)
+            expect(fake_backend).to receive(:add).with(u, 1, sort)
           end
           
-          collection.publish!(1, sort)
+          collection.add(1, sort)
         end
       end
 
@@ -62,11 +62,11 @@ module ActivityFeed
           expect(collection.backend).to eq(@backend)
         end
         
-        it 'should proxy publish! to each user proxy' do
+        it 'should proxy add to each user proxy' do
           user_list.flatten.each do |u|
-            expect(@backend).to receive(:publish!).with(u, event, sort)
+            expect(@backend).to receive(:add).with(u, event, sort)
           end
-          collection.publish!(event, sort)
+          collection.add(event, sort)
 
         end
       end

@@ -2,8 +2,8 @@ require_relative 'test_classes'
 
 RSpec.shared_context :fake_backend_context do |*|
   let(:fake_backend) { ActivityFeed::Backend::FakeBackend.new }
-  it 'should now respond to publish!' do
-    expect(fake_backend).to respond_to(:publish!)
+  it 'should now respond to add' do
+    expect(fake_backend).to respond_to(:add)
   end
 end
 
@@ -17,7 +17,7 @@ end
 RSpec.shared_context :hash_backend_context do |*|
   let(:hash_backend) {
     ActivityFeed::Backend::HashBackend.new(
-      config: ActivityFeed.feed(:hash_feed)
+      config: ActivityFeed.define(:hash_feed)
     )
   }
 

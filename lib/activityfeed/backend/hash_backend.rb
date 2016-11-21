@@ -3,32 +3,32 @@ module ActivityFeed
   module Backend
     # Single user's feed representation within the hash
     extend Forwardable
-    def_delegators :@__hash, :size, :keys, :values, :key, :key?, :clear, :each_key, :each_pair, :each_value
+    def_delegators :@hash, :size, :keys, :values, :key, :key?, :clear, :each_key, :each_pair, :each_value
     # Reference implementation of the simplest possible backend using 
     # in-process hash.
     
     class HashBackend
       include ActivityFeed::Backend
 
-      attr_accessor :__hash
+      attr_accessor :hash
 
       def initialize(config:)
         self.config = config
-        self.__hash = ::Hash.new
+        self.hash   = ::Hash.new
         self
       end
 
       # Overridden methods
-      def publish!(user, event, score)
+      def add(user, event, score)
         self[user].push(event, score)
       end
 
-      def remove!(user, event)
+      def remove(user, event)
         self[user].remove(event)
       end
 
-      def read!(user)
-        self[user].read!
+      def reset_unread(user)
+        self[user].reset_unread
       end
 
       def paginate(user, page, per_page)
@@ -45,16 +45,14 @@ module ActivityFeed
 
       # Hash-specific methods
       def users
-        keys.
-          map { |u| u.gsub(/^#{config.namespace}/, '') }.
-          map { |u| ActivityFeed::Serializable::Deserializer.klass_instance(u) }
+        keys.map { |u| ActivityFeed::Serializable::Deserializer.klass_instance(u) }
       end
       
 
       private
 
       def [](user)
-        __hash[::ActivityFeed::User::EventList.hash_key(user)] ||= ::ActivityFeed::User::EventList.new(user)
+        hash[::ActivityFeed::User::EventList.hash_key(user)] ||= ::ActivityFeed::User::EventList.new(user)
       end
     end
   end

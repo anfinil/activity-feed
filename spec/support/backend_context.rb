@@ -8,14 +8,14 @@ RSpec.shared_examples :backend_test do |*|
 
   let!(:feed_name) { :follower_feed }
 
-  let!(:feed) {
+  let!(:activity_feed) {
     ActivityFeed.clear!
-    ActivityFeed.feed(feed_name) { |config| config.backend = backend }
+    ActivityFeed.define(feed_name) { |config| config.backend = backend }
   }
 
-  let!(:users_feed) { feed.for(user_list) }
-  let!(:toms_feed) { feed.for(tom) }
-  let!(:kig_feed) { feed.for(kig) }
+  let!(:users_feed) { activity_feed.for(user_list) }
+  let!(:toms_feed) { activity_feed.for(tom) }
+  let!(:kig_feed) { activity_feed.for(kig) }
 
   before :each do
     event_list.each(&:fire!)
@@ -23,7 +23,7 @@ RSpec.shared_examples :backend_test do |*|
 
   context 'events for tom are fired' do
     it 'should have the correct backend assigned' do
-      expect(feed.backend).to eq(backend)
+      expect(activity_feed.backend).to eq(backend)
     end
 
     it 'should only have toms key' do
@@ -43,7 +43,7 @@ RSpec.shared_examples :backend_test do |*|
 
     context '#reset_read_time!' do
       before do
-        toms_feed.read!
+        toms_feed.reset_unread
         comment_event2.fire!
       end
 

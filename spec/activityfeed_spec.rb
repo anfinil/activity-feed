@@ -6,7 +6,7 @@ describe ActivityFeed do
   end
 
   context 'clearing configuration' do
-    before { ActivityFeed.feed(:test); ActivityFeed.clear! }
+    before { ActivityFeed.define(:test); ActivityFeed.clear! }
     it 'should not have any more feeds' do
       expect(ActivityFeed.feed_names).to be_empty
     end
@@ -15,8 +15,8 @@ describe ActivityFeed do
   context '#feed_names' do
     before do
       ActivityFeed.clear!
-      ActivityFeed.feed(:test1)
-      ActivityFeed.feed(:test2)
+      ActivityFeed.define(:test1)
+      ActivityFeed.define(:test2)
     end
 
     subject { ActivityFeed.feed_names }
@@ -27,15 +27,15 @@ describe ActivityFeed do
     let(:tags_feed) { :new_tags }
     context 'with the same key' do
       it 'should return the same configuration instance' do
-        expect(ActivityFeed.feed(tags_feed)).to_not be_nil
-        expect(ActivityFeed.feed(tags_feed)).to equal(ActivityFeed.feed(tags_feed))
+        expect(ActivityFeed.define(tags_feed)).to_not be_nil
+        expect(ActivityFeed.define(tags_feed)).to equal(ActivityFeed.define(tags_feed))
       end
     end
   end
 
   context 'invalid feed name' do
     it 'should raise an exception' do
-      expect { ActivityFeed.feed }.to raise_error(ArgumentError)
+      expect { ActivityFeed.define }.to raise_error(ArgumentError)
     end
   end
 

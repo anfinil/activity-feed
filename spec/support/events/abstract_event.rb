@@ -32,7 +32,7 @@ module MyApp
           def fire!
             super
             self.class.activity_feeds.each do |feed|
-              ActivityFeed.feed(feed).for(owner).publish!(self, self.created)
+              ActivityFeed.define(feed).for(owner).add(self, self.created)
             end
           end
         end
